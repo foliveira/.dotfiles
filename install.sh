@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGES=(shell git claude)
+PACKAGES=(shell git claude ssh)
 
 log() { printf "\033[1;34m==>\033[0m %s\n" "$*"; }
 
@@ -52,7 +52,8 @@ log "Stowing: ${PACKAGES[*]}"
 # --no-folding: stow always creates real directories and only symlinks individual files.
 # Without it, an empty target dir (e.g. ~/.config/tmux) would get symlinked wholesale and
 # any later writes (like TPM's plugin clones) would land inside the dotfiles repo.
-mkdir -p "$HOME/.config"
+mkdir -p "$HOME/.config" "$HOME/.ssh/control"
+chmod 700 "$HOME/.ssh" "$HOME/.ssh/control"
 cd "$DOTFILES"
 stow -R --no-folding -t "$HOME" "${PACKAGES[@]}"
 

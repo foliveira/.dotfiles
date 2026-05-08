@@ -1,0 +1,17 @@
+# Copy to ~/.ssh/config.local. Host-specific entries go here so they
+# don't end up in the public dotfiles repo.
+#
+# Order matters: SSH applies the first matching block, so put narrow
+# Host entries above the wildcard defaults in ~/.ssh/config.
+
+# Host work-bastion
+#     HostName bastion.example.com
+#     User foliveira
+#     ForwardAgent yes
+#     ProxyJump none
+
+# Different identity for a separate GitHub account.
+# Host github.com-personal
+#     HostName github.com
+#     User git
+#     IdentityFile ~/.ssh/id_ed25519_personal

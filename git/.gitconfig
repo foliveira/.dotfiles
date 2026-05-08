@@ -18,9 +18,15 @@
 [fetch]
     prune = true
 
+[branch]
+    sort = -committerdate
+
 [diff]
     algorithm = histogram
     colorMoved = default
+
+[merge]
+    conflictStyle = zdiff3
 
 [rerere]
     enabled = true
@@ -35,6 +41,7 @@
     gpgsign = true
 [tag]
     gpgsign = true
+    sort = version:refname
 
 [alias]
     co = checkout

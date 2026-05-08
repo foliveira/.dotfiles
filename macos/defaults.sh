@@ -8,18 +8,22 @@ if [[ "$(uname)" != "Darwin" ]]; then
 fi
 
 # Finder
-defaults write com.apple.finder AppleShowAllFiles -bool false           # toggle on demand with ⇧⌘.
 defaults write com.apple.finder ShowPathbar -bool true
 defaults write com.apple.finder ShowStatusBar -bool true
 defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"     # search current folder by default
 defaults write com.apple.finder _FXSortFoldersFirst -bool true
+defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"     # list view by default
+defaults write com.apple.finder NewWindowTarget -string "PfHm"          # open new windows in ~
+defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/"
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 
-# Save / print panels expanded by default
+# Save / print panels expanded by default; new docs save locally, not iCloud.
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
 defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
 defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
+defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
 # Keyboard
 defaults write NSGlobalDomain KeyRepeat -int 2
@@ -38,7 +42,6 @@ launchctl load "$plist_dst"
 # Screenshots
 mkdir -p "$HOME/Screenshots"
 defaults write com.apple.screencapture location "$HOME/Screenshots"
-defaults write com.apple.screencapture type -string "png"
 defaults write com.apple.screencapture disable-shadow -bool true
 
 # Dock
@@ -69,12 +72,52 @@ defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 
+# Skip Gatekeeper's "this app was downloaded from the internet" prompt. Trades
+# a small phishing-protection layer for fewer interruptions on trusted sources.
+defaults write com.apple.LaunchServices LSQuarantine -bool false
+
 # Require password immediately on sleep / screensaver
 defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
 
 # Skip Time Machine prompt for new disks
 defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
+
+# Software Update + App Store — auto-check, auto-download, auto-apply security
+# updates. Full OS upgrades still require manual confirmation.
+defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+defaults write com.apple.SoftwareUpdate AutomaticDownload -int 1
+defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -int 1
+defaults write com.apple.commerce AutoUpdate -bool true
+
+# Mission Control — keep space order stable, group windows by app.
+defaults write com.apple.dock mru-spaces -bool false
+defaults write com.apple.dock expose-group-apps -bool true
+
+# Tab cycles through every control in dialogs, not just text fields.
+defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+
+# Activity Monitor — show all processes, sort by CPU descending.
+defaults write com.apple.ActivityMonitor ShowCategory -int 0
+defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
+defaults write com.apple.ActivityMonitor SortDirection -int 0
+
+# TextEdit defaults to plain text, UTF-8.
+defaults write com.apple.TextEdit RichText -int 0
+defaults write com.apple.TextEdit PlainTextEncoding -int 4
+defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
+
+# Disk Utility — debug menu + advanced image options.
+defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
+defaults write com.apple.DiskUtility advanced-image-options -bool true
+
+# Safari — developer menu visible.
+defaults write com.apple.Safari IncludeDevelopMenu -bool true
+defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true
+
+# Show ~/Library — devs need it visible.
+chflags nohidden "$HOME/Library" 2>/dev/null || true
 
 # Developer folder for projects
 mkdir -p "$HOME/Developer"
@@ -92,5 +135,5 @@ defaults write NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically -bool tru
     defaults write com.apple.HIToolbox AppleCurrentKeyboardLayoutInputSourceID -string "com.apple.keylayout.Colemak"
 ) || echo "warning: failed to set Colemak layout — set manually in System Settings → Keyboard." >&2
 
-killall Finder Dock SystemUIServer cfprefsd 2>/dev/null || true
+killall Finder Dock SystemUIServer cfprefsd "Activity Monitor" Safari 2>/dev/null || true
 echo "Done. Some changes need a logout/restart."

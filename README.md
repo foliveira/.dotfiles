@@ -21,6 +21,7 @@ cd ~/.dotfiles
 
 ```
 shell/    .zshrc, .zprofile             → ~/
+          .editorconfig                 → ~/
           .config/starship.toml         → ~/.config/
           .config/ghostty/config        → ~/.config/ghostty/
           .config/tmux/tmux.conf        → ~/.config/tmux/
@@ -31,6 +32,8 @@ shell/    .zshrc, .zprofile             → ~/
           .config/gh/config.yml         → ~/.config/gh/
           .config/atuin/config.toml     → ~/.config/atuin/
 git/      .gitconfig, .gitignore_global → ~/
+ssh/      .ssh/config                   → ~/.ssh/
+          config.local.example          (copy to ~/.ssh/config.local)
 claude/   .claude/settings.json         → ~/.claude/
           CLAUDE.md.example             (copy to ~/.claude/CLAUDE.md)
 macos/    defaults.sh                          (run manually)
@@ -49,16 +52,11 @@ SSH key whose public half then goes into `~/.gitconfig.local`.
 3. Create or import an SSH key (Ed25519 recommended).
 4. On GitHub → Settings → SSH and GPG keys, add the same key twice:
    once as **Authentication Key**, once as **Signing Key**.
-5. To route all SSH (not just git) through the 1Password agent, add to
-   `~/.ssh/config`:
-
-   ```
-   Host *
-       IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-   ```
-
-   `~/.ssh/config` is intentionally not in this repo — host-specific entries
-   tend to be sensitive. If you want it stowed later, ask.
+The `IdentityAgent` line for 1Password is already in the stowed
+`~/.ssh/config`. Anything host-specific (work bastions, separate
+GitHub identities, ProxyJump chains) goes into `~/.ssh/config.local` —
+copy `ssh/config.local.example` to `~/.ssh/config.local` and fill in.
+That file is gitignored.
 
 ### 2. Git identity + signing key
 
@@ -96,14 +94,14 @@ Files under `~/.dotfiles/<package>/` are symlinked into `$HOME`, so edits apply
 immediately. After adding a new file to a package:
 
 ```bash
-./install.sh        # or: stow -R --no-folding -t ~ shell git claude
+./install.sh        # or: stow -R --no-folding -t ~ shell git claude ssh
 ```
 
 ## Removing
 
 ```bash
 cd ~/.dotfiles
-stow -D -t ~ shell git claude
+stow -D -t ~ shell git claude ssh
 ```
 
 ## Notes
