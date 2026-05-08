@@ -19,8 +19,8 @@ brew "zsh-completions"
 
 # Casks
 cask "ghostty"
-cask "docker"
-cask "visual-studio-code"
+cask "zed"
+cask "claude-code@latest"
 cask "1password"
 cask "1password-cli"
 
