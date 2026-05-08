@@ -1,0 +1,44 @@
+# Identity lives in ~/.gitconfig.local (gitignored, not in repo).
+[include]
+    path = ~/.gitconfig.local
+
+[core]
+    excludesfile = ~/.gitignore_global
+    editor = nvim
+
+[init]
+    defaultBranch = master
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[diff]
+    algorithm = histogram
+    colorMoved = default
+
+[rerere]
+    enabled = true
+
+# SSH commit signing via 1Password's SSH agent.
+# The signingkey itself lives in ~/.gitconfig.local.
+[gpg]
+    format = ssh
+[gpg "ssh"]
+    program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+[commit]
+    gpgsign = true
+[tag]
+    gpgsign = true
+
+[alias]
+    co = checkout
+    sw = switch
+    st = status -sb
+    lg = log --oneline --graph --decorate --all
+    last = log -1 HEAD

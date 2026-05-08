@@ -1,0 +1,5 @@
+[user]
+    name = Your Name
+    email = you@example.com
+    # Public key from 1Password (paste from "Copy Public Key" on the SSH key item).
+    signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI...
