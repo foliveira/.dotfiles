@@ -24,6 +24,7 @@ shell/    .zshrc, .zprofile             → ~/
           .config/starship.toml         → ~/.config/
           .config/ghostty/config        → ~/.config/ghostty/
           .config/tmux/tmux.conf        → ~/.config/tmux/
+          .config/zed/settings.json     → ~/.config/zed/
 git/      .gitconfig, .gitignore_global → ~/
 vim/      .vimrc                        → ~/
 macos/    defaults.sh                          (run manually)

@@ -1,0 +1,48 @@
+{
+  // Theme — auto-switches with macOS appearance, matching Ghostty.
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Latte",
+    "dark": "Catppuccin Mocha"
+  },
+
+  // Font — matches Ghostty/tmux for visual consistency.
+  "buffer_font_family": "JetBrainsMono Nerd Font Mono",
+  "buffer_font_size": 13,
+
+  "vim_mode": true,
+
+  "format_on_save": "on",
+  "remove_trailing_whitespace_on_save": true,
+  "ensure_final_newline_on_save": true,
+
+  "telemetry": {
+    "metrics": false,
+    "diagnostics": false
+  },
+
+  "show_whitespaces": "selection",
+  "use_autoclose": true,
+
+  "tab_size": 2,
+  "soft_wrap": "editor_width",
+  "preferred_line_length": 100,
+  "wrap_guides": [80, 100],
+
+  "cursor_blink": true,
+
+  // Per-language overrides where the 2-space default isn't right.
+  "languages": {
+    "Python": {
+      "tab_size": 4
+    },
+    "Go": {
+      "tab_size": 4,
+      "hard_tabs": true
+    },
+    "Markdown": {
+      "soft_wrap": "preferred_line_length",
+      "format_on_save": "off"
+    }
+  }
+}
