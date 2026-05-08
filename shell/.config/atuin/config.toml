@@ -1,0 +1,14 @@
+# Compact UI — picker takes ~25 lines instead of full screen.
+style = "compact"
+inline_height = 25
+
+# Show command preview pane (last exit code, duration, host).
+show_preview = true
+
+# Sync — only kicks in if you're logged in. Local-only otherwise.
+auto_sync = true
+sync_frequency = "5m"
+
+# Search defaults
+search_mode = "fuzzy"
+filter_mode = "global"

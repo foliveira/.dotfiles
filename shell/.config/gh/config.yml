@@ -1,0 +1,19 @@
+# SSH protocol — 'gh repo clone' / 'gh pr checkout' use ssh URLs so they
+# go through the existing 1Password SSH agent rather than a separate
+# gh-managed HTTPS token. Auth (~/.config/gh/hosts.yml) stays local.
+git_protocol: ssh
+editor: nvim
+prompt: enabled
+pager: less
+
+aliases:
+  co: pr checkout
+  prv: pr view
+  prl: pr list
+  prc: pr create
+  prd: pr diff
+  rv: pr review
+  rw: run watch
+  rl: run list
+  il: issue list
+  iv: issue view

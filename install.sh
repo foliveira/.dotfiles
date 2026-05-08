@@ -63,6 +63,20 @@ if [[ ! -d "$tpm_dir" ]]; then
     git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir"
 fi
 
+# Catppuccin themes for bat — not bundled, fetched once and cached.
+if command -v bat >/dev/null; then
+    bat_themes_dir="$(bat --config-dir)/themes"
+    if [[ ! -f "$bat_themes_dir/Catppuccin Mocha.tmTheme" ]]; then
+        log "Installing Catppuccin themes for bat"
+        mkdir -p "$bat_themes_dir"
+        curl -fsSL -o "$bat_themes_dir/Catppuccin Latte.tmTheme" \
+            https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Latte.tmTheme
+        curl -fsSL -o "$bat_themes_dir/Catppuccin Mocha.tmTheme" \
+            https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme
+        bat cache --build >/dev/null
+    fi
+fi
+
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
     log "Reminder: copy git/gitconfig.local.example → ~/.gitconfig.local and set name/email"
 fi

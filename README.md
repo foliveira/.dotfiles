@@ -26,6 +26,10 @@ shell/    .zshrc, .zprofile             → ~/
           .config/tmux/tmux.conf        → ~/.config/tmux/
           .config/zed/settings.json     → ~/.config/zed/
           .config/nvim/init.lua         → ~/.config/nvim/
+          .config/bat/config            → ~/.config/bat/
+          .config/ripgrep/ripgreprc     → ~/.config/ripgrep/
+          .config/gh/config.yml         → ~/.config/gh/
+          .config/atuin/config.toml     → ~/.config/atuin/
 git/      .gitconfig, .gitignore_global → ~/
 claude/   .claude/settings.json         → ~/.claude/
           CLAUDE.md.example             (copy to ~/.claude/CLAUDE.md)
@@ -111,6 +115,22 @@ stow -D -t ~ shell git claude
 Brewfile. The prompt uses `starship` if available and falls back to a plain
 zsh prompt otherwise.
 
+CLI helpers wired into `.zshrc` if installed:
+
+- `zoxide` — `z <fragment>` jumps, `zi` is fzf-style interactive.
+- `direnv` — runs `.envrc` automatically; first time per repo, `direnv allow`.
+- `mise` — picks up `.tool-versions` / `mise.toml` per project and pins
+  Node/Python/Ruby/Go versions automatically.
+- `atuin` — replaces fzf's Ctrl-R with a richer history picker. Local-only by
+  default; for cross-machine sync run `atuin register` then `atuin login`.
+- `gh` — first time, `gh auth login` and pick SSH so it routes through your
+  1Password agent. Aliases (`gh co`, `gh prv`, `gh prc`, …) defined in
+  `~/.config/gh/config.yml`.
+
+`install.sh` also fetches Catppuccin themes for bat once (not bundled
+upstream) and rebuilds bat's theme cache. bat then auto-picks the dark or
+light Catppuccin variant based on terminal background.
+
 ### tmux
 
 Prefix is `Ctrl-a` (pairs naturally with CapsLock-as-Ctrl). `Ctrl-a Ctrl-a`
@@ -139,6 +159,14 @@ across machines. Plugin contents themselves install on first use via
 it to `~/.claude/CLAUDE.md` and fill in. Not stowed; ignored via
 `.stow-local-ignore`. State directories under `~/.claude/` (history,
 sessions, projects, cache) stay local.
+
+### Tailscale
+
+`cask "tailscale-app"` installs the menu bar app, which also drops the
+`tailscale` CLI on PATH. After install, sign in via the menu bar or
+`tailscale up`. Tailnet config (ACLs, MagicDNS, SSH) lives in the admin
+console at https://login.tailscale.com — nothing in this repo configures
+it.
 
 ### Verifying signatures locally
 

@@ -1,0 +1,28 @@
+# Default flags applied to every rg invocation.
+# Loaded via $RIPGREP_CONFIG_PATH (set in .zshrc).
+
+--smart-case
+--hidden
+--follow
+--max-columns=200
+--max-columns-preview
+
+# Skip noisy directories
+--glob=!.git/
+--glob=!node_modules/
+--glob=!.next/
+--glob=!.nuxt/
+--glob=!dist/
+--glob=!build/
+--glob=!coverage/
+--glob=!target/
+--glob=!.venv/
+--glob=!__pycache__/
+--glob=!.DS_Store
+
+# Skip lockfiles and minified output
+--glob=!*.lock
+--glob=!*-lock.json
+--glob=!*.min.js
+--glob=!*.min.css
+--glob=!*.map

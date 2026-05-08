@@ -27,10 +27,20 @@ zstyle ':completion:*' group-name ''
 zstyle ':completion:*:descriptions' format '%F{yellow}%d%f'
 
 # Aliases
-alias ll='ls -lah'
 alias g='git'
-command -v eza >/dev/null && alias ls='eza'
+alias ts='tailscale'
+if command -v eza >/dev/null; then
+    alias ls='eza'
+    alias ll='eza -lah --git'
+    alias la='eza -a'
+    alias lt='eza --tree --level=2'
+else
+    alias ll='ls -lah'
+fi
 command -v bat >/dev/null && alias cat='bat --paging=never'
+
+# Pick up rg defaults from ripgreprc.
+[[ -f "$HOME/.config/ripgrep/ripgreprc" ]] && export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/ripgreprc"
 
 # fzf — keybindings (C-t files, C-r history, M-c cd) + completion via fzf --zsh.
 if command -v fzf >/dev/null; then
@@ -48,6 +58,19 @@ if command -v fzf >/dev/null; then
     fi
     source <(fzf --zsh)
 fi
+
+# zoxide — smart cd. `z foo` jumps to a frecency-ranked match, `zi` is interactive.
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+# direnv — auto-loads .envrc when entering a directory that has one.
+command -v direnv >/dev/null && eval "$(direnv hook zsh)"
+
+# mise — language version manager. Activates per-project .tool-versions / mise.toml.
+command -v mise >/dev/null && eval "$(mise activate zsh)"
+
+# atuin — better history search on Ctrl-R. Up-arrow stays as plain zsh history
+# (atuin's up-arrow takeover is intrusive; the picker is the real value).
+command -v atuin >/dev/null && eval "$(atuin init zsh --disable-up-arrow)"
 
 # zsh-autosuggestions — greys-out a suggested completion based on history.
 [[ -f "$brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && \
