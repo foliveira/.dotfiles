@@ -25,8 +25,8 @@ shell/    .zshrc, .zprofile             → ~/
           .config/ghostty/config        → ~/.config/ghostty/
           .config/tmux/tmux.conf        → ~/.config/tmux/
           .config/zed/settings.json     → ~/.config/zed/
+          .config/nvim/init.lua         → ~/.config/nvim/
 git/      .gitconfig, .gitignore_global → ~/
-vim/      .vimrc                        → ~/
 macos/    defaults.sh                          (run manually)
           com.user.capslock-to-ctrl.plist     (loaded by defaults.sh)
 ```
@@ -90,14 +90,14 @@ Files under `~/.dotfiles/<package>/` are symlinked into `$HOME`, so edits apply
 immediately. After adding a new file to a package:
 
 ```bash
-./install.sh        # or: stow -R -t ~ shell git vim
+./install.sh        # or: stow -R --no-folding -t ~ shell git
 ```
 
 ## Removing
 
 ```bash
 cd ~/.dotfiles
-stow -D -t ~ shell git vim
+stow -D -t ~ shell git
 ```
 
 ## Notes
