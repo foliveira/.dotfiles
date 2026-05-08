@@ -21,6 +21,7 @@ cd ~/.dotfiles
 
 ```
 shell/    .zshrc, .zprofile             → ~/
+          .config/starship.toml         → ~/.config/
 git/      .gitconfig, .gitignore_global → ~/
 vim/      .vimrc                        → ~/
 macos/    defaults.sh                   (run manually, not stowed)

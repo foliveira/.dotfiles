@@ -1,0 +1,68 @@
+# Two-line minimal prompt. Status on top, input symbol below.
+# Colors use ANSI 16-name aliases so the active terminal theme drives the hue.
+add_newline = true
+
+format = """
+$directory\
+$git_branch\
+$git_status\
+$nodejs\
+$python\
+$ruby\
+$golang\
+$rust\
+$line_break\
+$character"""
+
+[character]
+success_symbol = "[❯](cyan bold)"
+error_symbol = "[❯](red bold)"
+vimcmd_symbol = "[❮](green bold)"
+
+[directory]
+style = "blue bold"
+truncation_length = 3
+truncate_to_repo = false
+
+[git_branch]
+symbol = ""
+format = " on [$branch]($style)"
+style = "magenta bold"
+
+[git_status]
+format = " [$all_status$ahead_behind]($style)"
+style = "yellow"
+conflicted = "!"
+untracked = "?"
+modified = "✗"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+stashed = "$"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕"
+
+[cmd_duration]
+disabled = true
+
+# Language modules — only appear inside a project of that type.
+[nodejs]
+format = " via [node $version]($style)"
+style = "green"
+
+[python]
+format = " via [py $version]($style)"
+style = "yellow"
+
+[ruby]
+format = " via [ruby $version]($style)"
+style = "red"
+
+[golang]
+format = " via [go $version]($style)"
+style = "cyan"
+
+[rust]
+format = " via [rust $version]($style)"
+style = "red"

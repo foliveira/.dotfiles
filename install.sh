@@ -48,6 +48,8 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 log "Stowing: ${PACKAGES[*]}"
+# Ensure ~/.config exists so stow tree-merges into it instead of symlinking the whole directory.
+mkdir -p "$HOME/.config"
 cd "$DOTFILES"
 stow -R -t "$HOME" "${PACKAGES[@]}"
 
