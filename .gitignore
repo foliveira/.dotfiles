@@ -2,3 +2,4 @@
 *.local
 Brewfile.lock.json
 .DS_Store
+shell/.config/tmux/plugins/

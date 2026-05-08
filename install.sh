@@ -48,10 +48,19 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 log "Stowing: ${PACKAGES[*]}"
-# Ensure ~/.config exists so stow tree-merges into it instead of symlinking the whole directory.
+# --no-folding: stow always creates real directories and only symlinks individual files.
+# Without it, an empty target dir (e.g. ~/.config/tmux) would get symlinked wholesale and
+# any later writes (like TPM's plugin clones) would land inside the dotfiles repo.
 mkdir -p "$HOME/.config"
 cd "$DOTFILES"
-stow -R -t "$HOME" "${PACKAGES[@]}"
+stow -R --no-folding -t "$HOME" "${PACKAGES[@]}"
+
+# Tmux Plugin Manager — clone if missing. Inside tmux, run prefix + I to install plugins.
+tpm_dir="$HOME/.config/tmux/plugins/tpm"
+if [[ ! -d "$tpm_dir" ]]; then
+    log "Installing TPM (tmux plugin manager)"
+    git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir"
+fi
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then
     log "Reminder: copy git/gitconfig.local.example → ~/.gitconfig.local and set name/email"

@@ -26,6 +26,15 @@ defaults write NSGlobalDomain KeyRepeat -int 2
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool true       # press-and-hold accent picker
 
+# CapsLock → Left Control. Persists via a LaunchAgent that runs hidutil at login.
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+plist_src="$DOTFILES_DIR/macos/com.user.capslock-to-ctrl.plist"
+plist_dst="$HOME/Library/LaunchAgents/com.user.capslock-to-ctrl.plist"
+mkdir -p "$(dirname "$plist_dst")"
+cp "$plist_src" "$plist_dst"
+launchctl unload "$plist_dst" 2>/dev/null || true
+launchctl load "$plist_dst"
+
 # Screenshots
 mkdir -p "$HOME/Screenshots"
 defaults write com.apple.screencapture location "$HOME/Screenshots"

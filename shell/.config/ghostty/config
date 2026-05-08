@@ -1,0 +1,27 @@
+# Theme pair — Ghostty auto-switches with macOS appearance.
+theme = light:catppuccin-latte,dark:catppuccin-mocha
+
+# Launch directly into tmux. -A attaches to the 'main' session if it exists,
+# otherwise creates it. Every Ghostty surface shares the same session.
+command = /opt/homebrew/bin/tmux new-session -A -s main
+
+# Font — Mono variant forces single-cell width on all Nerd Font glyphs.
+font-family = JetBrainsMono Nerd Font Mono
+font-size = 13
+
+# Window — frameless feel with traffic lights kept, slight transparency, remember size.
+macos-titlebar-style = hidden
+background-opacity = 0.92
+background-blur-radius = 20
+window-save-state = always
+window-padding-x = 10
+window-padding-y = 10
+
+# Cursor
+cursor-style = bar
+cursor-style-blink = true
+
+# Behaviour
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+confirm-close-surface = false

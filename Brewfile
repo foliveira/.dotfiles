@@ -11,6 +11,7 @@ brew "tldr"
 # Editors / shell
 brew "neovim"
 brew "starship"
+brew "tmux"
 
 # zsh ergonomics — sourced from .zshrc when present
 brew "zsh-autosuggestions"
@@ -23,6 +24,9 @@ cask "zed"
 cask "claude-code@latest"
 cask "1password"
 cask "1password-cli"
+
+# Fonts
+cask "font-jetbrains-mono-nerd-font"
 
 # Mac App Store apps — uncomment after `brew install mas` and signing in.
 # brew "mas"

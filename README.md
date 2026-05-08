@@ -22,9 +22,12 @@ cd ~/.dotfiles
 ```
 shell/    .zshrc, .zprofile             → ~/
           .config/starship.toml         → ~/.config/
+          .config/ghostty/config        → ~/.config/ghostty/
+          .config/tmux/tmux.conf        → ~/.config/tmux/
 git/      .gitconfig, .gitignore_global → ~/
 vim/      .vimrc                        → ~/
-macos/    defaults.sh                   (run manually, not stowed)
+macos/    defaults.sh                          (run manually)
+          com.user.capslock-to-ctrl.plist     (loaded by defaults.sh)
 ```
 
 ## First-run setup on a new machine
@@ -76,9 +79,9 @@ keyboard layout and appearance to fully apply.
 
 ## Local overrides
 
-`.zshrc` and `.zprofile` source `~/.localrc` if it exists. Put machine-specific
-exports, work tokens, or one-off aliases there. It lives outside the repo, so
-nothing in `~/.dotfiles/` can leak it.
+`.zshrc` sources `~/.localrc` if it exists. Put machine-specific exports,
+work tokens, or one-off aliases there. It lives outside the repo, so nothing
+in `~/.dotfiles/` can leak it.
 
 ## Updating
 
@@ -104,6 +107,23 @@ stow -D -t ~ shell git vim
 `zsh-syntax-highlighting`, and `zsh-completions` when they're installed via
 Brewfile. The prompt uses `starship` if available and falls back to a plain
 zsh prompt otherwise.
+
+### tmux
+
+Prefix is `Ctrl-a` (pairs naturally with CapsLock-as-Ctrl). `Ctrl-a Ctrl-a`
+sends a literal `Ctrl-a` to the inner shell so readline's beginning-of-line
+still works.
+
+`install.sh` clones [TPM](https://github.com/tmux-plugins/tpm) into
+`~/.config/tmux/plugins/tpm` on first run. Inside a tmux session, hit
+`prefix + I` once to fetch the configured plugins (sensible, resurrect,
+continuum). Sessions auto-save every 15 min and restore on launch.
+
+### CapsLock → Ctrl
+
+`macos/defaults.sh` installs a LaunchAgent that runs `hidutil` on login to
+remap CapsLock to Left Control. It takes effect immediately on the
+machine where `defaults.sh` ran, and re-applies on every boot.
 
 ### Verifying signatures locally
 
