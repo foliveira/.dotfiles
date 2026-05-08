@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGES=(shell git)
+PACKAGES=(shell git claude)
 
 log() { printf "\033[1;34m==>\033[0m %s\n" "$*"; }
 
@@ -32,19 +32,20 @@ if [[ -f "$DOTFILES/Brewfile" ]]; then
     brew bundle --file="$DOTFILES/Brewfile"
 fi
 
-# Back up any pre-existing top-level dotfiles before stow would refuse to overwrite them.
-# Only handles depth-1 files per package — nested conflicts surface as stow errors.
+# Back up any pre-existing dotfiles before stow would refuse to overwrite them.
+# Walks the full tree per package so nested files (e.g. ~/.claude/settings.json) are also caught.
 backup_dir="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 for pkg in "${PACKAGES[@]}"; do
     [[ -d "$DOTFILES/$pkg" ]] || continue
     while IFS= read -r -d '' src; do
-        target="$HOME/$(basename "$src")"
+        rel="${src#$DOTFILES/$pkg/}"
+        target="$HOME/$rel"
         if [[ -f "$target" && ! -L "$target" ]]; then
-            mkdir -p "$backup_dir"
-            log "Backing up $target → $backup_dir/"
-            mv "$target" "$backup_dir/"
+            mkdir -p "$backup_dir/$(dirname "$rel")"
+            log "Backing up $target → $backup_dir/$rel"
+            mv "$target" "$backup_dir/$rel"
         fi
-    done < <(find "$DOTFILES/$pkg" -maxdepth 1 -type f -print0)
+    done < <(find "$DOTFILES/$pkg" -type f \! -name '.stow-local-ignore' -print0)
 done
 
 log "Stowing: ${PACKAGES[*]}"

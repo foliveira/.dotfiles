@@ -1,0 +1,31 @@
+# Personal Claude Code instructions
+
+Copy this to `~/.claude/CLAUDE.md` and fill in the placeholders. Anything
+in here applies to every Claude Code session globally; per-project context
+goes in a project-local CLAUDE.md instead.
+
+## About me
+
+- Role: <e.g. backend engineer at $COMPANY>
+- Email: <name@example.com>
+- Time zone: <e.g. Europe/Lisbon>
+
+## Communication
+
+- Be concise. Skip preambles and trailing summaries unless asked.
+- Show code and tool calls; don't narrate intent at length.
+- Match formality to the question — a one-line ask gets a one-line answer.
+
+## Code preferences
+
+- Prefer editing existing files over creating new ones.
+- No comments unless the *why* is non-obvious.
+- Don't add backwards-compatibility shims, error handling for impossible
+  cases, or speculative abstractions.
+- Use rg/fd over grep/find when both are available.
+
+## Workflow
+
+- For risky operations (deletes, force-push, schema changes), confirm first.
+- Don't commit unless I ask. Don't push unless I ask.
+- When in doubt about scope, do less.

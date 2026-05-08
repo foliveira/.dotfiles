@@ -27,6 +27,8 @@ shell/    .zshrc, .zprofile             → ~/
           .config/zed/settings.json     → ~/.config/zed/
           .config/nvim/init.lua         → ~/.config/nvim/
 git/      .gitconfig, .gitignore_global → ~/
+claude/   .claude/settings.json         → ~/.claude/
+          CLAUDE.md.example             (copy to ~/.claude/CLAUDE.md)
 macos/    defaults.sh                          (run manually)
           com.user.capslock-to-ctrl.plist     (loaded by defaults.sh)
 ```
@@ -90,14 +92,14 @@ Files under `~/.dotfiles/<package>/` are symlinked into `$HOME`, so edits apply
 immediately. After adding a new file to a package:
 
 ```bash
-./install.sh        # or: stow -R --no-folding -t ~ shell git
+./install.sh        # or: stow -R --no-folding -t ~ shell git claude
 ```
 
 ## Removing
 
 ```bash
 cd ~/.dotfiles
-stow -D -t ~ shell git
+stow -D -t ~ shell git claude
 ```
 
 ## Notes
@@ -125,6 +127,18 @@ continuum). Sessions auto-save every 15 min and restore on launch.
 `macos/defaults.sh` installs a LaunchAgent that runs `hidutil` on login to
 remap CapsLock to Left Control. It takes effect immediately on the
 machine where `defaults.sh` ran, and re-applies on every boot.
+
+### Claude Code
+
+`claude/.claude/settings.json` carries the model/permissions defaults plus
+the `enabledPlugins` and `extraKnownMarketplaces` config so plugins follow
+across machines. Plugin contents themselves install on first use via
+`/plugin`; only the enable/marketplace metadata is committed.
+
+`claude/CLAUDE.md.example` is the personal-instructions template — copy
+it to `~/.claude/CLAUDE.md` and fill in. Not stowed; ignored via
+`.stow-local-ignore`. State directories under `~/.claude/` (history,
+sessions, projects, cache) stay local.
 
 ### Verifying signatures locally
 

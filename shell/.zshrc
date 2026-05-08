@@ -32,8 +32,22 @@ alias g='git'
 command -v eza >/dev/null && alias ls='eza'
 command -v bat >/dev/null && alias cat='bat --paging=never'
 
-# fzf integration (installed by `$(brew --prefix)/opt/fzf/install`)
-[[ -f "$HOME/.fzf.zsh" ]] && source "$HOME/.fzf.zsh"
+# fzf — keybindings (C-t files, C-r history, M-c cd) + completion via fzf --zsh.
+if command -v fzf >/dev/null; then
+    if command -v fd >/dev/null; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+        export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+    fi
+    export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border=rounded --info=inline --multi'
+    if command -v bat >/dev/null; then
+        export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range=:200 {} 2>/dev/null || eza --tree --color=always --level=2 {} 2>/dev/null'"
+    fi
+    if command -v eza >/dev/null; then
+        export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always --level=3 {}'"
+    fi
+    source <(fzf --zsh)
+fi
 
 # zsh-autosuggestions — greys-out a suggested completion based on history.
 [[ -f "$brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && \
