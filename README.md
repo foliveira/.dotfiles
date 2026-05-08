@@ -68,7 +68,10 @@ set in the public `git/.gitconfig`.
 bash macos/defaults.sh
 ```
 
-Some changes need a logout/restart to fully apply.
+Sets Finder/Dock/screenshots/animations, switches input source to **English
+Colemak only** (replaces any existing layouts), enables auto light/dark,
+disables hot corners, and creates `~/Developer/`. Logout required for the
+keyboard layout and appearance to fully apply.
 
 ## Local overrides
 
