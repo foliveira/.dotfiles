@@ -111,10 +111,14 @@ defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
 
-# Safari — developer menu visible.
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true
+# Safari — developer menu. Safari's prefs live in a sandboxed container, so
+# the calling terminal needs Full Disk Access (System Settings → Privacy &
+# Security → Full Disk Access → enable Ghostty/Terminal). Soft-fail otherwise.
+(
+    defaults write com.apple.Safari IncludeDevelopMenu -bool true
+    defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+    defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true
+) 2>/dev/null || echo "warning: Safari defaults write blocked — grant Full Disk Access to your terminal to enable." >&2
 
 # Show ~/Library — devs need it visible.
 chflags nohidden "$HOME/Library" 2>/dev/null || true

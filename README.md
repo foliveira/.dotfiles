@@ -37,6 +37,8 @@ ssh/      .ssh/config                   → ~/.ssh/
 claude/   .claude/settings.json         → ~/.claude/
           CLAUDE.md.example             (copy to ~/.claude/CLAUDE.md)
 macos/    defaults.sh                          (run manually)
+          set-hostname.sh                      (run manually with a name arg)
+          touchid-sudo.sh                      (run manually, one-shot)
           com.user.capslock-to-ctrl.plist     (loaded by defaults.sh)
 ```
 
