@@ -1,6 +1,4 @@
-# Catppuccin themes are installed by install.sh into bat's theme directory.
-# bat picks --theme-dark / --theme-light automatically based on terminal background.
---theme-dark="Catppuccin Mocha"
---theme-light="Catppuccin Latte"
+# Catppuccin Mocha is installed by install.sh into bat's theme directory.
+--theme="Catppuccin Mocha"
 --style="numbers,changes,header"
 --paging=auto

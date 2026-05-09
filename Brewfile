@@ -18,6 +18,7 @@ brew "lazygit"
 brew "btop"
 brew "dust"
 brew "duf"
+brew "pam-reattach"
 
 # Editors / shell
 brew "neovim"

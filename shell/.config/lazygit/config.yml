@@ -1,0 +1,22 @@
+# Catppuccin Mocha theme — matches Ghostty's forced-dark setting.
+gui:
+  nerdFontsVersion: "3"
+  theme:
+    activeBorderColor: ["#89b4fa", "bold"]
+    inactiveBorderColor: ["#a6adc8"]
+    optionsTextColor: ["#89b4fa"]
+    selectedLineBgColor: ["#313244"]
+    cherryPickedCommitBgColor: ["#94e2d5"]
+    cherryPickedCommitFgColor: ["#94e2d5"]
+    unstagedChangesColor: ["#f38ba8"]
+    defaultFgColor: ["#cdd6f4"]
+    searchingActiveBorderColor: ["#f9e2af"]
+
+git:
+  paging:
+    colorArg: always
+    pager: ""
+  mainBranches:
+    - master
+    - main
+  parseEmoji: true

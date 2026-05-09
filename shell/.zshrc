@@ -42,6 +42,9 @@ command -v bat >/dev/null && alias cat='bat --paging=never'
 # Pick up rg defaults from ripgreprc.
 [[ -f "$HOME/.config/ripgrep/ripgreprc" ]] && export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/ripgreprc"
 
+# Tell eza to read theme.yml from ~/.config/eza on macOS too.
+[[ -f "$HOME/.config/eza/theme.yml" ]] && export EZA_CONFIG_DIR="$HOME/.config/eza"
+
 # fzf — keybindings (C-t files, C-r history, M-c cd) + completion via fzf --zsh.
 if command -v fzf >/dev/null; then
     if command -v fd >/dev/null; then
@@ -49,7 +52,11 @@ if command -v fzf >/dev/null; then
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
         export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
     fi
-    export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border=rounded --info=inline --multi'
+    export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border=rounded --info=inline --multi
+        --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
+        --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
+        --color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
+        --color=selected-bg:#45475a,border:#313244,label:#cdd6f4'
     if command -v bat >/dev/null; then
         export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range=:200 {} 2>/dev/null || eza --tree --color=always --level=2 {} 2>/dev/null'"
     fi

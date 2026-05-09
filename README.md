@@ -31,11 +31,16 @@ shell/    .zshrc, .zprofile             → ~/
           .config/ripgrep/ripgreprc     → ~/.config/ripgrep/
           .config/gh/config.yml         → ~/.config/gh/
           .config/atuin/config.toml     → ~/.config/atuin/
+          .config/lazygit/config.yml    → ~/.config/lazygit/
+          .config/btop/btop.conf        → ~/.config/btop/
+          .config/mise/config.toml      → ~/.config/mise/
+          .config/direnv/direnvrc       → ~/.config/direnv/
 git/      .gitconfig, .gitignore_global → ~/
 ssh/      .ssh/config                   → ~/.ssh/
           config.local.example          (copy to ~/.ssh/config.local)
 claude/   .claude/settings.json         → ~/.claude/
           CLAUDE.md.example             (copy to ~/.claude/CLAUDE.md)
+bin/      bin/<scripts>                 → ~/bin/
 macos/    defaults.sh                          (run manually)
           set-hostname.sh                      (run manually with a name arg)
           touchid-sudo.sh                      (run manually, one-shot)
@@ -96,14 +101,14 @@ Files under `~/.dotfiles/<package>/` are symlinked into `$HOME`, so edits apply
 immediately. After adding a new file to a package:
 
 ```bash
-./install.sh        # or: stow -R --no-folding -t ~ shell git claude ssh
+./install.sh        # or: stow -R --no-folding -t ~ shell git claude ssh bin
 ```
 
 ## Removing
 
 ```bash
 cd ~/.dotfiles
-stow -D -t ~ shell git claude ssh
+stow -D -t ~ shell git claude ssh bin
 ```
 
 ## Notes
@@ -123,13 +128,23 @@ CLI helpers wired into `.zshrc` if installed:
   Node/Python/Ruby/Go versions automatically.
 - `atuin` — replaces fzf's Ctrl-R with a richer history picker. Local-only by
   default; for cross-machine sync run `atuin register` then `atuin login`.
+  One-time import of your existing zsh history: `atuin import zsh`.
 - `gh` — first time, `gh auth login` and pick SSH so it routes through your
   1Password agent. Aliases (`gh co`, `gh prv`, `gh prc`, …) defined in
   `~/.config/gh/config.yml`.
 
-`install.sh` also fetches Catppuccin themes for bat once (not bundled
-upstream) and rebuilds bat's theme cache. bat then auto-picks the dark or
-light Catppuccin variant based on terminal background.
+### Theme & font
+
+Everything is standardised on **Catppuccin Mocha** + **JetBrainsMono Nerd
+Font Mono**. The font lands via `cask "font-jetbrains-mono-nerd-font"`.
+Theme distribution:
+
+- Bundled-with-tool: Ghostty, Zed, btop.
+- Hex palette in config: lazygit, fzf, tmux status bar, starship.
+- Named theme via setting: atuin (`catppuccin-mocha`), bat (`Catppuccin
+  Mocha`).
+- Fetched by `install.sh`: bat theme (not upstream-bundled), eza
+  `theme.yml`, neovim colorscheme (cloned into nvim's native pack/start).
 
 ### tmux
 

@@ -1,6 +1,6 @@
-# Theme pair — Ghostty auto-switches with macOS appearance.
-# Bundled theme names use space-capitalized form; check `ghostty +list-themes`.
-theme = light:Catppuccin Latte,dark:Catppuccin Mocha
+# Always dark, regardless of macOS appearance.
+theme = Catppuccin Mocha
+window-theme = dark
 
 # Launch directly into tmux. -A attaches to the 'main' session if it exists,
 # otherwise creates it. Every Ghostty surface shares the same session.

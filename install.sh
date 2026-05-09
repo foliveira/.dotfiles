@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGES=(shell git claude ssh)
+PACKAGES=(shell git claude ssh bin)
 
 log() { printf "\033[1;34m==>\033[0m %s\n" "$*"; }
 
@@ -64,18 +64,35 @@ if [[ ! -d "$tpm_dir" ]]; then
     git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir"
 fi
 
-# Catppuccin themes for bat — not bundled, fetched once and cached.
+# Catppuccin Mocha for bat — not bundled, fetched once and cached.
 if command -v bat >/dev/null; then
     bat_themes_dir="$(bat --config-dir)/themes"
     if [[ ! -f "$bat_themes_dir/Catppuccin Mocha.tmTheme" ]]; then
-        log "Installing Catppuccin themes for bat"
+        log "Installing Catppuccin Mocha theme for bat"
         mkdir -p "$bat_themes_dir"
-        curl -fsSL -o "$bat_themes_dir/Catppuccin Latte.tmTheme" \
-            https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Latte.tmTheme
         curl -fsSL -o "$bat_themes_dir/Catppuccin Mocha.tmTheme" \
             https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme
         bat cache --build >/dev/null
     fi
+fi
+
+# Catppuccin Mocha (mauve accent) for eza — fetched once. EZA_CONFIG_DIR is
+# set in .zshrc so eza reads from this path on macOS too (where its default
+# is ~/Library/Application Support/eza).
+eza_theme="$HOME/.config/eza/theme.yml"
+if [[ ! -f "$eza_theme" ]]; then
+    log "Installing Catppuccin Mocha theme for eza"
+    mkdir -p "$(dirname "$eza_theme")"
+    curl -fsSL -o "$eza_theme" \
+        https://raw.githubusercontent.com/catppuccin/eza/main/themes/mocha/catppuccin-mocha-mauve.yml
+fi
+
+# Catppuccin colorscheme for nvim — loaded via nvim's native pack/start so
+# init.lua's `colorscheme catppuccin-mocha` resolves with no plugin manager.
+nvim_catppuccin="$HOME/.local/share/nvim/site/pack/colors/start/catppuccin"
+if [[ ! -d "$nvim_catppuccin" ]]; then
+    log "Installing Catppuccin colorscheme for neovim"
+    git clone --depth 1 https://github.com/catppuccin/nvim "$nvim_catppuccin"
 fi
 
 if [[ ! -f "$HOME/.gitconfig.local" ]]; then

@@ -1,0 +1,13 @@
+# Global mise config. Per-project .tool-versions / mise.toml overrides this.
+
+[tools]
+# Uncomment to pin global fallback versions used outside any project.
+# node = "lts"
+# python = "3.12"
+# go = "latest"
+
+[settings]
+# Don't auto-install tools that haven't been activated by an .envrc / mise.toml.
+not_found_auto_install = false
+# Show which tools are active in the prompt status line — set false if noisy.
+status = { show_tools = true, show_env = false }

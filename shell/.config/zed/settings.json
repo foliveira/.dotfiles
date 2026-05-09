@@ -1,10 +1,20 @@
 {
   // Theme — auto-switches with macOS appearance, matching Ghostty.
-  "theme": {
-    "mode": "system",
-    "light": "Catppuccin Latte",
-    "dark": "Catppuccin Mocha"
+  "session": {
+    "trust_all_worktrees": true,
   },
+  "agent_servers": {
+    "claude-acp": {
+      "favorite_config_option_values": {
+        "effort": ["max"],
+        "model": ["default"],
+        "mode": ["auto"],
+      },
+      "type": "registry",
+    },
+  },
+  "base_keymap": "Atom",
+  "theme": "Catppuccin Mocha",
 
   // Font — matches Ghostty/tmux for visual consistency.
   "buffer_font_family": "JetBrainsMono Nerd Font Mono",
@@ -18,7 +28,7 @@
 
   "telemetry": {
     "metrics": false,
-    "diagnostics": false
+    "diagnostics": false,
   },
 
   "show_whitespaces": "selection",
@@ -34,15 +44,15 @@
   // Per-language overrides where the 2-space default isn't right.
   "languages": {
     "Python": {
-      "tab_size": 4
+      "tab_size": 4,
     },
     "Go": {
       "tab_size": 4,
-      "hard_tabs": true
+      "hard_tabs": true,
     },
     "Markdown": {
       "soft_wrap": "preferred_line_length",
-      "format_on_save": "off"
-    }
-  }
+      "format_on_save": "off",
+    },
+  },
 }

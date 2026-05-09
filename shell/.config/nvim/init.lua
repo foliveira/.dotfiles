@@ -1,4 +1,5 @@
--- Single-file neovim config. Plugin-free; colors come from terminal palette.
+-- Single-file neovim config. Catppuccin colorscheme is dropped into pack/start
+-- by install.sh, so no plugin manager is needed.
 
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
@@ -12,6 +13,8 @@ vim.opt.scrolloff = 4
 vim.opt.sidescrolloff = 8
 vim.opt.showmode = false
 vim.opt.termguicolors = true
+
+pcall(vim.cmd.colorscheme, 'catppuccin-mocha')
 
 -- Indentation defaults — 2 spaces, soft tabs.
 vim.opt.expandtab = true
