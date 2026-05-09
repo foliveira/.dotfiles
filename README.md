@@ -35,6 +35,7 @@ shell/    .zshrc, .zprofile             → ~/
           .config/btop/btop.conf        → ~/.config/btop/
           .config/mise/config.toml      → ~/.config/mise/
           .config/direnv/direnvrc       → ~/.config/direnv/
+          .config/tealdeer/config.toml  → ~/.config/tealdeer/
 git/      .gitconfig, .gitignore_global → ~/
 ssh/      .ssh/config                   → ~/.ssh/
           config.local.example          (copy to ~/.ssh/config.local)
@@ -94,6 +95,52 @@ keyboard layout and appearance to fully apply.
 `.zshrc` sources `~/.localrc` if it exists. Put machine-specific exports,
 work tokens, or one-off aliases there. It lives outside the repo, so nothing
 in `~/.dotfiles/` can leak it.
+
+## Project-scoped secrets
+
+For per-project tokens (database URLs, API keys), use `direnv` + the
+1Password CLI rather than baking them into `.localrc` or committing
+`.env` files.
+
+In a project directory:
+
+```bash
+# .envrc — gitignored
+export DATABASE_URL="$(op read 'op://Personal/Project DB/url')"
+export OPENAI_API_KEY="$(op read 'op://Personal/OpenAI/api key')"
+# Optional: load any non-secret defaults from a checked-in .env.example
+dotenv .env.defaults
+```
+
+Then once: `direnv allow`. Every subsequent `cd` into the project sets
+the env vars; `cd` out unsets them. The values never live on disk in
+plaintext — `op read` pulls them from 1Password each time, authenticating
+via the same SSH agent integration that handles git signing.
+
+For projects where you don't want 1Password in the loop, fall back to a
+gitignored `.env`:
+
+```bash
+# .envrc
+dotenv
+```
+
+Reads `.env` into the environment when you enter the directory.
+
+## Sync helper
+
+`bin/dot` (on PATH after `install.sh`) wraps the three things you'd run
+to bring a machine up to date:
+
+```bash
+dot          # git pull + brew bundle + install.sh
+dot pull     # just git pull
+dot brew     # just brew bundle
+dot install  # just install.sh
+```
+
+It auto-detects the dotfiles location (`~/.dotfiles`, `~/Projects/.dotfiles`,
+or `~/dotfiles`) or honours `$DOTFILES` if you've set it.
 
 ## Updating
 

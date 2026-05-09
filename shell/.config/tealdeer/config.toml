@@ -1,0 +1,6 @@
+# Auto-refresh the page cache weekly so `tldr` is always current. Colours
+# inherit terminal palette, which is Catppuccin Mocha via Ghostty.
+
+[updates]
+auto_update = true
+auto_update_interval_hours = 168

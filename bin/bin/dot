@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# dot — sync the dotfiles repo and re-apply everything in one shot.
+# Usage: dot [pull|brew|install|all]   (default: all)
+set -euo pipefail
+
+if [[ -z "${DOTFILES:-}" ]]; then
+    for candidate in "$HOME/.dotfiles" "$HOME/Projects/.dotfiles" "$HOME/dotfiles"; do
+        if [[ -d "$candidate/.git" ]]; then
+            DOTFILES="$candidate"
+            break
+        fi
+    done
+fi
+
+if [[ -z "${DOTFILES:-}" || ! -d "$DOTFILES/.git" ]]; then
+    echo "error: dotfiles repo not found. Set \$DOTFILES or clone to ~/.dotfiles." >&2
+    exit 1
+fi
+
+step="${1:-all}"
+log() { printf "\033[1;34m→\033[0m %s\n" "$*"; }
+
+run_pull()    { log "git pull";  git -C "$DOTFILES" pull --ff-only; }
+run_brew()    { log "brew bundle"; brew bundle --file="$DOTFILES/Brewfile"; }
+run_install() { log "install.sh";  bash "$DOTFILES/install.sh"; }
+
+case "$step" in
+    pull)    run_pull ;;
+    brew)    run_brew ;;
+    install) run_install ;;
+    all)     run_pull; run_brew; run_install ;;
+    *)       echo "Usage: $(basename "$0") [pull|brew|install|all]" >&2; exit 1 ;;
+esac
