@@ -1,4 +1,4 @@
-# Catppuccin Mocha is installed by install.sh into bat's theme directory.
+# Catppuccin Mocha ships with bat 0.26 and later.
 --theme="Catppuccin Mocha"
 --style="numbers,changes,header"
 --paging=auto

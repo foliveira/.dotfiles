@@ -26,7 +26,7 @@ echo "→ HostName:      $name"
 echo "→ LocalHostName: $local_name"
 echo "→ ComputerName:  $name"
 
-sudo scutil --set HostName "$name"
+sudo scutil --set HostName "$local_name"
 sudo scutil --set LocalHostName "$local_name"
 sudo scutil --set ComputerName "$name"
 
