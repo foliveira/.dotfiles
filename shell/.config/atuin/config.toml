@@ -14,4 +14,4 @@ search_mode = "fuzzy"
 filter_mode = "global"
 
 [theme]
-name = "catppuccin-mocha"
+name = "catppuccin-mocha-mauve"

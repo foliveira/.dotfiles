@@ -3,17 +3,14 @@
 # Usage: dot [pull|brew|install|all]   (default: all)
 set -euo pipefail
 
+# This script is stowed as ~/bin/dot, a symlink into the repo's bin/bin/, so
+# the repo is two levels above the link's target. $DOTFILES overrides it.
 if [[ -z "${DOTFILES:-}" ]]; then
-    for candidate in "$HOME/.dotfiles" "$HOME/Projects/.dotfiles" "$HOME/dotfiles"; do
-        if [[ -d "$candidate/.git" ]]; then
-            DOTFILES="$candidate"
-            break
-        fi
-    done
+    DOTFILES="$(cd "$(dirname "$(readlink -f "$0")")/../.." && pwd -P)"
 fi
 
-if [[ -z "${DOTFILES:-}" || ! -d "$DOTFILES/.git" ]]; then
-    echo "error: dotfiles repo not found. Set \$DOTFILES or clone to ~/.dotfiles." >&2
+if [[ -z "${DOTFILES:-}" || ! -e "$DOTFILES/.git" ]]; then
+    echo "error: dotfiles repo not found at $DOTFILES. Set \$DOTFILES." >&2
     exit 1
 fi
 
@@ -28,6 +25,6 @@ case "$step" in
     pull)    run_pull ;;
     brew)    run_brew ;;
     install) run_install ;;
-    all)     run_pull; run_brew; run_install ;;
+    all)     run_pull; run_install ;;  # install.sh runs brew bundle itself
     *)       echo "Usage: $(basename "$0") [pull|brew|install|all]" >&2; exit 1 ;;
 esac

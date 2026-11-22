@@ -18,6 +18,10 @@ window-save-state = always
 window-padding-x = 10
 window-padding-y = 10
 
+# Colemak makes macOS Option type characters, so Ghostty would not send Alt.
+# Left Option becomes Alt (fzf's Alt-C, zsh's Alt-b/f/.); right Option keeps accents.
+macos-option-as-alt = left
+
 # Cursor
 cursor-style = bar
 cursor-style-blink = true

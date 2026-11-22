@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 PACKAGES=(shell git claude ssh bin)
 
 log() { printf "\033[1;34m==>\033[0m %s\n" "$*"; }
@@ -38,13 +38,18 @@ backup_dir="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 for pkg in "${PACKAGES[@]}"; do
     [[ -d "$DOTFILES/$pkg" ]] || continue
     while IFS= read -r -d '' src; do
-        rel="${src#$DOTFILES/$pkg/}"
+        rel="${src#"$DOTFILES/$pkg/"}"
         target="$HOME/$rel"
-        if [[ -f "$target" && ! -L "$target" ]]; then
-            mkdir -p "$backup_dir/$(dirname "$rel")"
-            log "Backing up $target → $backup_dir/$rel"
-            mv "$target" "$backup_dir/$rel"
+        # Regular files, and symlinks that don't point into this repo: stow
+        # refuses to replace either.
+        if [[ -L "$target" ]]; then
+            [[ "$(readlink -f "$target" 2>/dev/null)" == "$DOTFILES/"* ]] && continue
+        elif [[ ! -f "$target" ]]; then
+            continue
         fi
+        mkdir -p "$backup_dir/$(dirname "$rel")"
+        log "Backing up $target → $backup_dir/$rel"
+        mv "$target" "$backup_dir/$rel"
     done < <(find "$DOTFILES/$pkg" -type f \! -name '.stow-local-ignore' -print0)
 done
 
@@ -64,17 +69,19 @@ if [[ ! -d "$tpm_dir" ]]; then
     git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir"
 fi
 
-# Catppuccin Mocha for bat — not bundled, fetched once and cached.
-if command -v bat >/dev/null; then
-    bat_themes_dir="$(bat --config-dir)/themes"
-    if [[ ! -f "$bat_themes_dir/Catppuccin Mocha.tmTheme" ]]; then
-        log "Installing Catppuccin Mocha theme for bat"
-        mkdir -p "$bat_themes_dir"
-        curl -fsSL -o "$bat_themes_dir/Catppuccin Mocha.tmTheme" \
-            https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme
-        bat cache --build >/dev/null
-    fi
-fi
+# Catppuccin Mocha for btop and atuin: neither bundles it, so fetch once.
+# (bat 0.26 and later ship it.)
+fetch_theme() { # tool, destination, url
+    command -v "$1" >/dev/null || return 0
+    [[ -f "$2" ]] && return 0
+    log "Installing Catppuccin Mocha theme for $1"
+    mkdir -p "$(dirname "$2")"
+    curl -fsSL -o "$2" "$3"
+}
+fetch_theme btop "$HOME/.config/btop/themes/catppuccin_mocha.theme" \
+    https://raw.githubusercontent.com/catppuccin/btop/main/themes/catppuccin_mocha.theme
+fetch_theme atuin "$HOME/.config/atuin/themes/catppuccin-mocha-mauve.toml" \
+    https://raw.githubusercontent.com/catppuccin/atuin/main/themes/mocha/catppuccin-mocha-mauve.toml
 
 # Catppuccin Mocha (mauve accent) for eza — fetched once. EZA_CONFIG_DIR is
 # set in .zshrc so eza reads from this path on macOS too (where its default
