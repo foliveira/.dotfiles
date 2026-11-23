@@ -20,5 +20,6 @@ drift="$("$DOTFILES/lib/merge-json.sh" "$base" "$target")"
 check "merge: a second run reports no drift" test -z "$drift"
 check "merge: herdr's hook is kept once" \
     test "$(jq '[.. | objects | select(.command? == "herdr-hook")] | length' "$target")" = 1
+# shellcheck disable=SC2016 # $t, $b and $p are jq variables.
 check "merge: every base key is in the result" \
     jq -e --slurpfile b "$base" '. as $t | $b[0] | [paths(scalars)] | all(. as $p | ($t | getpath($p)) == ($b[0] | getpath($p)))' "$target"

@@ -30,7 +30,8 @@ sig_git agent commit -q --allow-empty -m "agent work"
 sig_git laptop switch -q master
 sig_git laptop merge -q --no-ff -m "merge feature" feature
 check "a commit is signed through the agent" \
-    git -C "$sig_dir/repo" -c gpg.ssh.allowedSignersFile="$sig_dir/allowed" verify-commit HEAD
+    git -C "$sig_dir/repo" -c gpg.ssh.program=ssh-keygen \
+    -c gpg.ssh.allowedSignersFile="$sig_dir/allowed" verify-commit HEAD
 check "a laptop-signed merge of agent commits passes" verify "$base" master
 
 merged="$(git -C "$sig_dir/repo" rev-parse HEAD)"

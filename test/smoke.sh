@@ -24,9 +24,11 @@ check() { # description, command...
 }
 
 echo "stow"
-(cd "$DOTFILES" && stow --no-folding -t "$HOME" shell git ssh bin agents) &&
-    pass "all packages stow into an empty HOME" ||
+if (cd "$DOTFILES" && stow --no-folding -t "$HOME" shell git ssh bin agents); then
+    pass "all packages stow into an empty HOME"
+else
     fail "all packages stow into an empty HOME"
+fi
 
 echo "zsh"
 err="$(zsh -l -i -c 'exit' 2>&1 >/dev/null)"
@@ -45,7 +47,7 @@ rm "$HOME/.config/local/gitconfig"
 
 for t in "$DOTFILES"/test/smoke.d/*.sh; do
     [[ -e "$t" ]] || continue
-    echo "$(basename "$t" .sh)"
+    basename "$t" .sh
     # shellcheck source=/dev/null
     source "$t"
 done

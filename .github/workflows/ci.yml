@@ -1,8 +1,8 @@
 name: ci
 
+# Every branch, so agent branches are checked before a laptop merges them.
 on:
   push:
-    branches: [master]
   pull_request:
 
 permissions:
@@ -12,7 +12,7 @@ jobs:
   check:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # gitleaks reads the whole history.
           fetch-depth: 0
@@ -31,7 +31,7 @@ jobs:
         run: xargs shellcheck < "$RUNNER_TEMP/scripts"
 
       - name: shfmt
-        run: xargs shfmt -i 4 -ci -d < "$RUNNER_TEMP/scripts"
+        run: xargs shfmt -i 4 -d < "$RUNNER_TEMP/scripts"
 
       - name: actionlint
         run: actionlint

@@ -21,8 +21,8 @@ hooks {
       }
       ["shfmt"] {
         glob = shell_files
-        check = "shfmt -i 4 -ci -d {{files}}"
-        fix = "shfmt -i 4 -ci -w {{files}}"
+        check = "shfmt -i 4 -d {{files}}"
+        fix = "shfmt -i 4 -w {{files}}"
       }
     }
   }
