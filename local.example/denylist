@@ -1,0 +1,4 @@
+# One extended regular expression per line. A commit to the public dotfiles
+# repo fails if a line it adds matches any of them. Matching ignores case.
+example-org
+example\.internal

@@ -1,51 +1,44 @@
+# Git settings for the Macs. Shared settings are in ~/.config/git/common.
+[include]
+    path = ~/.config/git/common
+
+[user]
+    name = Fabio Oliveira
+    email = foliveira@users.noreply.github.com
+    # signingkey is set in the private config repo (~/.config/local/gitconfig)
+    # until the public key is added here.
+
 [core]
     excludesfile = ~/.gitignore_global
     editor = nvim
+    pager = delta
 
-[init]
-    defaultBranch = master
+# delta shows diffs with syntax colours and line numbers.
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    navigate = true
+    dark = true
+    line-numbers = true
 
-[pull]
-    rebase = true
-
-[push]
-    autoSetupRemote = true
-
-[fetch]
-    prune = true
-
-[branch]
-    sort = -committerdate
-
-[diff]
-    algorithm = histogram
-    colorMoved = default
-
-[merge]
-    conflictStyle = zdiff3
-
-[rerere]
-    enabled = true
-
-# SSH commit signing via 1Password's SSH agent.
-# The signingkey itself lives in ~/.gitconfig.local.
+# Commits and tags are signed with the SSH key in 1Password.
 [gpg]
     format = ssh
 [gpg "ssh"]
     program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+    # Keys trusted when checking signatures (`git log --show-signature`, `dot`).
+    allowedSignersFile = ~/.config/git/allowed_signers
 [commit]
     gpgsign = true
 [tag]
     gpgsign = true
-    sort = version:refname
 
-[alias]
-    co = checkout
-    sw = switch
-    st = status -sb
-    lg = log --oneline --graph --decorate --all
-    last = log -1 HEAD
-
-# Machine-local identity and overrides, included last so they win.
+# Machine settings, last so they win: the private config repo, shared then
+# per machine. ~/.gitconfig.local is the old place; it goes away once its
+# contents move to the private repo.
 [include]
     path = ~/.gitconfig.local
+[include]
+    path = ~/.config/local-shared/gitconfig
+[include]
+    path = ~/.config/local/gitconfig

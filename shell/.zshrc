@@ -93,5 +93,10 @@ fi
 
 unset brew_prefix
 
-# Machine-local secrets and overrides — never committed.
-[[ -f "$HOME/.localrc" ]] && source "$HOME/.localrc"
+# Machine settings from the private config repo: shared, then this machine.
+# No secrets there; read them from 1Password when needed (op read, fx).
+# ~/.localrc is the old place and goes away once its contents move.
+for f in "$HOME/.config/local-shared/env.zsh" "$HOME/.config/local/env.zsh" "$HOME/.localrc"; do
+    [[ -f "$f" ]] && source "$f"
+done
+unset f

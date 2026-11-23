@@ -1,0 +1,29 @@
+// Pre-commit checks for this public repo. Turn them on with `hk install`.
+amends "package://github.com/jdx/hk/releases/download/v2.13.0/hk@2.13.0#/Config.pkl"
+
+local shell_files = List("*.sh", "install.sh", "bin/bin/*", "macos/*.sh", "lib/*.sh", "test/**/*.sh")
+
+hooks {
+  ["pre-commit"] {
+    steps {
+      // Secrets (tokens, private keys) in the staged changes.
+      ["gitleaks"] {
+        check = "gitleaks git --pre-commit --staged --redact --no-banner"
+      }
+      // Private names (work orgs, home host names) listed in the private
+      // config repo's denylist.
+      ["denylist"] {
+        check = "lib/check-denylist.sh"
+      }
+      ["shellcheck"] {
+        glob = shell_files
+        check = "shellcheck {{files}}"
+      }
+      ["shfmt"] {
+        glob = shell_files
+        check = "shfmt -i 4 -ci -d {{files}}"
+        fix = "shfmt -i 4 -ci -w {{files}}"
+      }
+    }
+  }
+}

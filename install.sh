@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Set up this Mac from the dotfiles repo. Safe to run again at any time.
 #
-# Usage: install.sh [--full | --homelab] [--upgrade]
-#   --full     laptops: core, dev and desktop tools (the default)
-#   --homelab  the homelab Mac: core and homelab tools
-#   --upgrade  also upgrade installed Homebrew packages (`dot upgrade` uses this)
+# Usage: install.sh [--full | --homelab] [--machine NAME] [--local-repo URL] [--upgrade]
+#   --full            laptops: core, dev and desktop tools (the default)
+#   --homelab         the homelab Mac: core and homelab tools
+#   --machine NAME    this Mac's folder in the private config repo
+#                     (personal, work or homelab)
+#   --local-repo URL  clone the private config repo from URL if it is missing
+#   --upgrade         also upgrade installed Homebrew packages (`dot upgrade`)
 #
-# The chosen profile is saved in ~/.config/dotfiles/profile, so later runs
-# (and `dot`) use it without the flag.
+# The profile and machine are saved in ~/.config/dotfiles/profile, so later
+# runs (and `dot`) use them without the flags.
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -25,6 +28,8 @@ die() {
 # --- Options -------------------------------------------------------------
 
 profile=""
+machine=""
+local_url=""
 upgrade=0
 if [[ -f "$PROFILE_FILE" ]]; then
     # shellcheck source=/dev/null
@@ -34,9 +39,17 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
     --full) profile=full ;;
     --homelab) profile=homelab ;;
+    --machine)
+        machine="${2:?--machine needs a name}"
+        shift
+        ;;
+    --local-repo)
+        local_url="${2:?--local-repo needs a URL}"
+        shift
+        ;;
     --upgrade) upgrade=1 ;;
     -h | --help)
-        sed -n '2,11p' "$0"
+        sed -n '2,15p' "$0"
         exit 0
         ;;
     *) die "unknown option: $1" ;;
@@ -58,7 +71,7 @@ homelab)
 esac
 
 mkdir -p "$STATE_DIR"
-printf 'profile=%s\n' "$profile" >"$PROFILE_FILE"
+printf 'profile=%s\nmachine=%s\n' "$profile" "$machine" >"$PROFILE_FILE"
 log "Profile: $profile"
 
 # --- Homebrew ------------------------------------------------------------
@@ -113,6 +126,29 @@ mkdir -p "$HOME/.config" "$HOME/.ssh/control"
 chmod 700 "$HOME/.ssh" "$HOME/.ssh/control"
 log "Stowing: ${PACKAGES[*]}"
 (cd "$DOTFILES" && stow -R --no-folding -t "$HOME" "${PACKAGES[@]}")
+
+# --- Private config repo -------------------------------------------------
+
+# Private settings (signing key, work email rules, host names) live in a
+# separate private repo, next to this one. See local.example/README.md.
+local_repo="$(dirname "$DOTFILES")/dotfiles-local"
+if [[ ! -d "$local_repo" && -n "$local_url" ]]; then
+    log "Cloning the private config repo"
+    git clone "$local_url" "$local_repo"
+fi
+if [[ -d "$local_repo" && -n "$machine" ]]; then
+    [[ -d "$local_repo/$machine" ]] || die "no folder '$machine' in $local_repo"
+    printf '%s\n' "$local_repo" >"$STATE_DIR/local-repo"
+    ln -sfn "$local_repo/$machine" "$HOME/.config/local"
+    [[ -d "$local_repo/shared" ]] && ln -sfn "$local_repo/shared" "$HOME/.config/local-shared"
+    if [[ -f "$local_repo/$machine/mise.toml" ]]; then
+        mkdir -p "$HOME/.config/mise/conf.d"
+        ln -sfn "$local_repo/$machine/mise.toml" "$HOME/.config/mise/conf.d/local.toml"
+    fi
+    log "Private config: $local_repo/$machine"
+else
+    log "Private config repo not set up (see local.example/README.md)"
+fi
 
 # --- Plugins and themes --------------------------------------------------
 

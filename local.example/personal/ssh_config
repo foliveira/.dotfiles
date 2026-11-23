@@ -1,0 +1,3 @@
+Host homelab
+    HostName homelab.example.internal
+    User you
