@@ -31,7 +31,7 @@ jobs:
         run: xargs shellcheck < "$RUNNER_TEMP/scripts"
 
       - name: shfmt
-        run: xargs shfmt -i 4 -ci -d < "$RUNNER_TEMP/scripts"
+        run: xargs shfmt -i 4 -d < "$RUNNER_TEMP/scripts"
 
       - name: actionlint
         run: actionlint

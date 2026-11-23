@@ -10,11 +10,11 @@ fi
 # Finder
 defaults write com.apple.finder ShowPathbar -bool true
 defaults write com.apple.finder ShowStatusBar -bool true
-defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"     # search current folder by default
+defaults write com.apple.finder FXDefaultSearchScope -string "SCcf" # search current folder by default
 defaults write com.apple.finder _FXSortFoldersFirst -bool true
 defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
-defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"     # list view by default
-defaults write com.apple.finder NewWindowTarget -string "PfHm"          # open new windows in ~
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv" # list view by default
+defaults write com.apple.finder NewWindowTarget -string "PfHm"      # open new windows in ~
 defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/"
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 
@@ -28,7 +28,7 @@ defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 # Keyboard
 defaults write NSGlobalDomain KeyRepeat -int 2
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
-defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool true       # press-and-hold accent picker
+defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool true # press-and-hold accent picker
 
 # CapsLock → Left Control. Persists via a LaunchAgent that runs hidutil at login.
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -49,8 +49,8 @@ defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock autohide-delay -float 0
 defaults write com.apple.dock autohide-time-modifier -float 0.15
 defaults write com.apple.dock show-recents -bool false
-defaults write com.apple.dock launchanim -bool false                    # no bounce on app launch
-defaults write com.apple.dock expose-animation-duration -float 0.1      # faster Mission Control
+defaults write com.apple.dock launchanim -bool false               # no bounce on app launch
+defaults write com.apple.dock expose-animation-duration -float 0.1 # faster Mission Control
 defaults write com.apple.dock mineffect -string "scale"
 defaults write com.apple.dock tilesize -int 48
 
