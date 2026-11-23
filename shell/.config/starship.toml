@@ -1,7 +1,10 @@
 # Two-line minimal prompt with Catppuccin Mocha palette.
 add_newline = true
 
+# $username and $hostname only show over SSH (and username as root).
 format = """
+$username\
+$hostname\
 $directory\
 $git_branch\
 $git_status\

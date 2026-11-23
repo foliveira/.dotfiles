@@ -7,15 +7,12 @@
 --max-columns=200
 --max-columns-preview
 
-# Skip noisy directories
+# Skip folders that are never source. rg also skips what .gitignore lists,
+# so build output folders are not listed here: some repos track them.
 --glob=!.git/
 --glob=!node_modules/
 --glob=!.next/
 --glob=!.nuxt/
---glob=!dist/
---glob=!build/
---glob=!coverage/
---glob=!target/
 --glob=!.venv/
 --glob=!__pycache__/
 --glob=!.DS_Store

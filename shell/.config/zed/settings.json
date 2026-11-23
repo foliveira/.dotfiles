@@ -1,9 +1,6 @@
 {
   // Theme — auto-switches with macOS appearance, matching Ghostty.
   "auto_install_extensions": { "catppuccin": true },
-  "session": {
-    "trust_all_worktrees": true,
-  },
   "agent_servers": {
     "claude-acp": {
       "favorite_config_option_values": {
