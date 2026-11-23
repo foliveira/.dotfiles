@@ -1,13 +1,28 @@
-# Global mise config. Per-project .tool-versions / mise.toml overrides this.
-
-[tools]
-# Uncomment to pin global fallback versions used outside any project.
-# node = "lts"
-# python = "3.12"
-# go = "latest"
+# Global mise settings. There is no [tools] table on purpose: tools exist only
+# inside the projects that declare them.
 
 [settings]
-# Don't auto-install tools that haven't been activated by an .envrc / mise.toml.
+# Trust is tied to each config file's contents. A new or changed mise.toml
+# (including one changed by `git pull`) needs `mise trust` before it runs.
+# Without this, `mise install` and `mise x` trust a cloned repo by themselves
+# and run its hooks.
+paranoid = true
+
+# Don't install a release until it is a week old.
+minimum_release_age = "7d"
+
+# Read the Node version from .node-version, the file nub also reads, so both
+# agree on one version.
+idiomatic_version_file_enable_tools = ["node"]
+
+# Don't install a tool just because a command was not found.
 not_found_auto_install = false
-# Show which tools are active in the prompt status line — set false if noisy.
+
+# show_tools: list the active tools in mise's status messages.
 status = { show_tools = true, show_env = false }
+
+[hooks]
+# Install what a project declares when you enter it. This runs on every
+# directory change; in a project you haven't trusted it only prints the trust
+# error.
+enter = "mise install --quiet"

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Scaffold a new project: mkdir, git init, .gitignore, .envrc, README.
+# Start a new project: a folder with git, a .gitignore, mise.toml, fnox.toml
+# and a README, and a first commit.
 # Usage: new-project <name> [parent-dir]   (parent defaults to ~/Developer)
-set -e
+set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
     echo "Usage: $(basename "$0") <name> [parent-dir]" >&2
@@ -19,34 +20,52 @@ fi
 
 mkdir -p "$project"
 cd "$project"
-
 git init -q
 
-cat > .gitignore <<'EOF'
+cat >.gitignore <<'END'
 .DS_Store
 .env
 .env.local
-.envrc.local
+fnox.local.toml
+mise.local.toml
 .venv/
 node_modules/
 dist/
 build/
 *.log
-EOF
+END
 
-cat > .envrc <<'EOF'
-# direnv config. Run `direnv allow` after editing.
-# layout python
-# layout node
-# export FOO=bar
-EOF
+cat >mise.toml <<'END'
+# Tools and settings for this project. mise installs them when you enter the
+# folder.
+[tools]
+# node = "24"
+# python = "3.13"
+# hk = "2"
 
-cat > README.md <<EOF
-# $name
-EOF
+[env]
+# Settings that are not secret. Secrets go in fnox.toml.
+# APP_ENV = "development"
+
+[tasks.dev]
+# Runs with the secrets from fnox.toml.
+# run = "fx -- nub run dev"
+END
+
+cat >fnox.toml <<'END'
+# Secrets for this project, read from the 1Password Dev vault.
+# Run commands that need them with:  fx -- <command>
+[secrets]
+# DATABASE_URL = { provider = "op", value = "My App/database-url" }
+END
+
+printf '# %s\n' "$name" >README.md
+
+# Trust the mise.toml just written, so entering the folder doesn't complain.
+command -v mise >/dev/null && mise trust -q mise.toml
 
 git add .
-git commit -q -m "Initial commit"
+git commit -q -m "chore: start project"
 
 echo "Created $project"
-echo "Next: cd $project && direnv allow && \$EDITOR ."
+echo "Next: cd $project && \$EDITOR ."

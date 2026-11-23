@@ -66,11 +66,14 @@ fi
 # zoxide — smart cd. `z foo` jumps to a frecency-ranked match, `zi` is interactive.
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
-# direnv — auto-loads .envrc when entering a directory that has one.
-command -v direnv >/dev/null && eval "$(direnv hook zsh)"
-
-# mise — language version manager. Activates per-project .tool-versions / mise.toml.
+# mise: puts each project's tools on PATH when you enter it, and installs
+# missing ones (see ~/.config/mise/config.toml). Nothing is active outside
+# projects.
 command -v mise >/dev/null && eval "$(mise activate zsh)"
+
+# nub replaces npm. nubx prefers local bins, asks before downloading a package,
+# and skips its install scripts.
+command -v nubx >/dev/null && alias npx=nubx
 
 # atuin — better history search on Ctrl-R. Up-arrow stays as plain zsh history
 # (atuin's up-arrow takeover is intrusive; the picker is the real value).

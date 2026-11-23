@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# fx: run a command with the project's secrets, like `fnox exec`, but safer.
+#
+#   fx -- npm run dev
+#   fx --approve       approve the project's current fnox files without running
+#
+# A project's fnox files can run commands and ask for any secret, and fnox has
+# no trust step. So fx shows the files and asks once each time they change.
+# fnox then reads 1Password through a service account that can only see the
+# Dev vault. Its token is in the macOS Keychain:
+#   security add-generic-password -s fnox-dev-vault -a "$USER" -w
+set -euo pipefail
+
+state="$HOME/.local/state/fx/approved"
+mkdir -p "$(dirname "$state")"
+
+# The fnox files fnox reads here: from / down to the current directory.
+files=()
+dir="$PWD"
+while :; do
+    for name in fnox.toml .fnox.toml .config/fnox.toml fnox.local.toml .fnox.local.toml; do
+        [[ -f "$dir/$name" ]] && files+=("$dir/$name")
+    done
+    [[ "$dir" == / ]] && break
+    dir="$(dirname "$dir")"
+done
+if [[ ${#files[@]} -eq 0 ]]; then
+    echo "fx: no fnox.toml here or above" >&2
+    exit 1
+fi
+
+hash="$(for f in "${files[@]}"; do
+    printf '%s\n' "$f"
+    shasum -a 256 <"$f"
+done | shasum -a 256 | cut -d' ' -f1)"
+
+if ! grep -qxF -- "$PWD $hash" "$state" 2>/dev/null; then
+    echo "fx: these fnox files are new or changed since you last approved them:"
+    for f in "${files[@]}"; do
+        printf '\n--- %s\n' "$f"
+        cat "$f"
+    done
+    echo
+    read -r -p "Trust them for $PWD? [y/N] " answer </dev/tty
+    [[ "$answer" == [yY] ]] || exit 1
+    awk -v p="$PWD " 'index($0, p) != 1' "$state" >"$state.tmp" 2>/dev/null || true
+    printf '%s %s\n' "$PWD" "$hash" >>"$state.tmp"
+    mv "$state.tmp" "$state"
+fi
+
+if [[ "${1:-}" == --approve ]]; then
+    exit 0
+fi
+[[ "${1:-}" == -- ]] && shift
+[[ $# -gt 0 ]] || {
+    echo "usage: fx -- <command>" >&2
+    exit 1
+}
+
+token="$(security find-generic-password -s fnox-dev-vault -a "${USER:-$(id -un)}" -w 2>/dev/null)" || {
+    echo "fx: no service account token in the Keychain (see the top of $0)" >&2
+    exit 1
+}
+FNOX_OP_SERVICE_ACCOUNT_TOKEN="$token" exec fnox exec -- "$@"

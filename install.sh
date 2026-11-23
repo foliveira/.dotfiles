@@ -150,6 +150,19 @@ else
     log "Private config repo not set up (see local.example/README.md)"
 fi
 
+# --- npm and nub safety settings ------------------------------------------
+
+# nub reads ~/.npmrc. The file is not stowed, because `npm login` writes
+# tokens into it and they would end up in this repo. Only the missing lines
+# are added.
+if [[ "$profile" == full ]]; then
+    touch "$HOME/.npmrc"
+    chmod 600 "$HOME/.npmrc"
+    for line in advisoryCheck=required minimumReleaseAge=7d; do
+        grep -q "^${line%%=*}=" "$HOME/.npmrc" || printf '%s\n' "$line" >>"$HOME/.npmrc"
+    done
+fi
+
 # --- Plugins and themes --------------------------------------------------
 
 tpm_dir="$HOME/.config/tmux/plugins/tpm"
