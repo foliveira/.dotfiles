@@ -40,7 +40,7 @@ echo "git"
 mkdir -p "$HOME/.config/local"
 printf '[user]\n    name = Local Override\n' >"$HOME/.config/local/gitconfig"
 check "a local git value overrides the shared one" \
-    test "$(git config --global user.name)" = "Local Override"
+    test "$(git config --includes --global user.name)" = "Local Override"
 rm "$HOME/.config/local/gitconfig"
 
 for t in "$DOTFILES"/test/smoke.d/*.sh; do

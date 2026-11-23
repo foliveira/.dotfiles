@@ -23,6 +23,9 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*:descriptions' format '%F{yellow}%d%f'
 
+# herdr: tab completion for its commands.
+command -v herdr >/dev/null && source <(herdr completion zsh)
+
 # Aliases
 alias g='git'
 alias ts='tailscale'

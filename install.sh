@@ -150,6 +150,15 @@ else
     log "Private config repo not set up (see local.example/README.md)"
 fi
 
+# Download a file once, if the tool that uses it is installed.
+fetch() { # tool, destination, url
+    command -v "$1" >/dev/null || return 0
+    [[ -f "$2" ]] && return 0
+    log "Downloading $(basename "$2") for $1"
+    mkdir -p "$(dirname "$2")"
+    curl -fsSL -o "$2" "$3"
+}
+
 # --- npm and nub safety settings ------------------------------------------
 
 # nub reads ~/.npmrc. The file is not stowed, because `npm login` writes
@@ -163,6 +172,42 @@ if [[ "$profile" == full ]]; then
     done
 fi
 
+# --- Agents (laptops) ------------------------------------------------------
+
+if [[ "$profile" == full ]]; then
+    if [[ ! -x "$HOME/.local/bin/claude" ]]; then
+        log "Installing Claude Code (official installer)"
+        curl -fsSL https://claude.ai/install.sh | bash
+    fi
+    # The base settings are merged, not linked, so /config changes and herdr's
+    # hooks can live next to them. Differences are printed first.
+    bash "$DOTFILES/lib/merge-json.sh" "$DOTFILES/agents/claude-settings.json" "$HOME/.claude/settings.json"
+
+    # Homebrew's hunspell has no dictionaries. Claude's spellcheck finds them
+    # in ~/Library/Spelling.
+    for ext in aff dic; do
+        fetch hunspell "$HOME/Library/Spelling/en_US.$ext" \
+            "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/en/en_US.$ext"
+    done
+
+    # ~/bin/pi is the wrapper from this repo, so look for another pi.
+    real_pi=""
+    while IFS= read -r candidate; do
+        [[ "$candidate" -ef "$DOTFILES/bin/bin/pi" ]] || real_pi="$candidate"
+    done < <(type -ap pi)
+    if command -v nub >/dev/null && [[ -z "$real_pi" ]]; then
+        log "Installing pi with nub"
+        nub add -g @earendil-works/pi-coding-agent
+    fi
+    bash "$DOTFILES/lib/merge-json.sh" "$DOTFILES/agents/pi-settings.json" "$HOME/.pi/agent/settings.json"
+
+    # After the merges, so herdr's hooks are added to the final files.
+    if command -v herdr >/dev/null; then
+        herdr integration install claude
+        herdr integration install pi
+    fi
+fi
+
 # --- Plugins and themes --------------------------------------------------
 
 tpm_dir="$HOME/.config/tmux/plugins/tpm"
@@ -172,13 +217,6 @@ if [[ ! -d "$tpm_dir" ]]; then
 fi
 
 # Catppuccin Mocha for tools that don't ship it. bat 0.26 and later do.
-fetch() { # tool, destination, url
-    command -v "$1" >/dev/null || return 0
-    [[ -f "$2" ]] && return 0
-    log "Downloading $(basename "$2") for $1"
-    mkdir -p "$(dirname "$2")"
-    curl -fsSL -o "$2" "$3"
-}
 fetch btop "$HOME/.config/btop/themes/catppuccin_mocha.theme" \
     https://raw.githubusercontent.com/catppuccin/btop/main/themes/catppuccin_mocha.theme
 fetch atuin "$HOME/.config/atuin/themes/catppuccin-mocha-mauve.toml" \

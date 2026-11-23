@@ -1,0 +1,20 @@
+# herdr settings. Only keys that differ from herdr's defaults are here.
+# Pane keys follow Colemak: a left, r down, s up, w right (the same as tmux).
+# The prefix stays at herdr's default, ctrl+b.
+
+[keys]
+focus_pane_left = ["prefix+a", "prefix+left"]
+focus_pane_down = ["prefix+r", "prefix+down"]
+focus_pane_up = ["prefix+s", "prefix+up"]
+focus_pane_right = ["prefix+w", "prefix+right"]
+
+# Navigate mode: plain keys, no prefix.
+navigate_pane_left = ["a", "left"]
+navigate_pane_down = ["r", "down"]
+navigate_pane_up = ["s", "up"]
+navigate_pane_right = ["w", "right"]
+
+# Moved because a/r/s/w are taken above.
+workspace_picker = "prefix+f"
+resize_mode = "prefix+m"
+settings = "prefix+comma"

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Start pi with Homebrew's node@24 first on PATH. pi needs Node 22.19 or later,
+# and node@24 is keg-only, so it is not on PATH otherwise.
+set -euo pipefail
+
+node_bin="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/node@24/bin"
+[[ -x "$node_bin/node" ]] || {
+    echo "pi: node@24 is missing. Run: brew install node@24" >&2
+    exit 1
+}
+
+# Find the real pi: the next one on PATH that is not this script.
+IFS=: read -ra dirs <<<"$PATH"
+for dir in "${dirs[@]}"; do
+    if [[ -x "$dir/pi" && ! "$dir/pi" -ef "${BASH_SOURCE[0]}" ]]; then
+        PATH="$node_bin:$PATH" exec "$dir/pi" "$@"
+    fi
+done
+echo "pi: not installed. Run: nub add -g @earendil-works/pi-coding-agent" >&2
+exit 1
