@@ -1,0 +1,5 @@
+# The homelab Mac: runs the homelab's Docker containers.
+
+cask "orbstack"
+brew "smartmontools" # SSD health (smartctl); `dot doctor` uses it
+brew "gdu"           # find what fills the disk

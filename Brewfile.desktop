@@ -1,0 +1,12 @@
+# Desktop apps for the laptops.
+
+cask "ghostty"
+cask "zed"
+cask "1password"
+cask "tailscale-app"
+cask "font-jetbrains-mono-nerd-font"
+
+# Upkeep and safety
+cask "blockblock"    # alerts when something installs a launch agent or login item
+cask "lulu"          # asks before a new program connects out
+cask "pearcleaner"   # removes an app and the files it leaves behind

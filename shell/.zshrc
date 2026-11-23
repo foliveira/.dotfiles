@@ -9,11 +9,8 @@ setopt HIST_FIND_NO_DUPS HIST_EXPIRE_DUPS_FIRST SHARE_HISTORY
 setopt AUTO_CD INTERACTIVE_COMMENTS NO_BEEP
 bindkey -e
 
-# Homebrew prefix — set by .zprofile via `brew shellenv`. Fall back if running
-# zsh in a context where .zprofile didn't run (e.g. some IDE terminals).
-brew_prefix="${HOMEBREW_PREFIX:-}"
-[[ -z "$brew_prefix" && -d /opt/homebrew ]] && brew_prefix=/opt/homebrew
-[[ -z "$brew_prefix" && -d /usr/local/Homebrew ]] && brew_prefix=/usr/local
+# Homebrew's prefix, set by `brew shellenv` in .zprofile.
+brew_prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
 
 # zsh-completions — must be on FPATH before compinit runs.
 [[ -d "$brew_prefix/share/zsh-completions" ]] && fpath=("$brew_prefix/share/zsh-completions" $fpath)
