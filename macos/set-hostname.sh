@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Set HostName / LocalHostName / ComputerName.
-# Usage: bash macos/set-hostname.sh "Fabio's MacBook"
+# Set HostName, LocalHostName and ComputerName.
+# Usage: bash macos/set-hostname.sh work-mbp
 set -e
 
 if [[ "$(uname)" != "Darwin" ]]; then

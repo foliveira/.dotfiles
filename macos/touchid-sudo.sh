@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Enable Touch ID for sudo via /etc/pam.d/sudo_local. macOS Sonoma+ keeps
-# this file across system updates, so this is a one-shot setup.
+# Turn on Touch ID for sudo through /etc/pam.d/sudo_local. macOS Sonoma and
+# later keep this file across updates, so run it once.
 #
-# Inside tmux/screen, plain pam_tid silently falls through to a password
-# prompt — pam_reattach fixes that by re-attaching the sudo session to the
-# user's GUI, so the Touch ID dialog actually appears.
+# Inside tmux, pam_tid alone falls back to a password prompt. pam_reattach
+# connects sudo to your login session, so the Touch ID dialog shows.
 set -e
 
 if [[ "$(uname)" != "Darwin" ]]; then

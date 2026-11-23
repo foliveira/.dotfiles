@@ -26,3 +26,16 @@ dotfiles-local/
 | `mise.toml` | mise (machine folder only) | settings for this machine |
 
 The files in this folder are examples with fake values.
+
+## Set it up
+
+1. Create a private GitHub repo called `dotfiles-local`.
+2. Copy this folder's files into it and replace the fake values. Make one
+   folder per machine: `personal`, `work`, `homelab`.
+3. Move what is in the old local files (`~/.gitconfig.local`, `~/.localrc`,
+   `~/.ssh/config.local`, `~/.config/tmux/local.conf`) into the right folder.
+   If you find a secret, put it in 1Password instead.
+4. On each Mac: `~/.dotfiles/install.sh --machine NAME --local-repo URL`.
+5. Delete the old local files. `dot doctor` warns while they exist.
+
+Keep the Paseo container's GitHub token away from this repo.

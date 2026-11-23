@@ -126,7 +126,8 @@ chflags nohidden "$HOME/Library" 2>/dev/null || true
 # Developer folder for projects
 mkdir -p "$HOME/Developer"
 
-# Appearance — auto switch light/dark with sunrise/sunset
+# Appearance: macOS switches between light and dark by itself. Ghostty, Zed
+# and the terminal tools stay on Catppuccin Mocha either way.
 defaults delete NSGlobalDomain AppleInterfaceStyle 2>/dev/null || true
 defaults write NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically -bool true
 
