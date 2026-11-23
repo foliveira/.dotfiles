@@ -1,0 +1,9 @@
+# Tools for working on this repo. Run `mise trust` once, then `hk install`
+# to turn on the pre-commit checks in hk.pkl.
+[tools]
+hk = "2"
+pkl = "latest"
+gitleaks = "8"
+shellcheck = "latest"
+shfmt = "3"
+actionlint = "1"

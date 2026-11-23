@@ -7,3 +7,6 @@ export EDITOR=nvim VISUAL=nvim
 
 # Personal scripts in ~/bin (managed by the bin/ stow package).
 [[ -d "$HOME/bin" ]] && export PATH="$HOME/bin:$PATH"
+
+# fnox must never run a command a project's fnox.toml asks for to log in.
+export FNOX_PROMPT_AUTH=false

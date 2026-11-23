@@ -1,0 +1,14 @@
+# fnox settings for every project on this Mac.
+#
+# Projects list their secrets in fnox.toml with short names, for example
+#   [secrets]
+#   DATABASE_URL = { provider = "op", value = "My App/database-url" }
+# which reads op://Dev/My App/database-url.
+#
+# Run commands with `fx` (in ~/bin), not `fnox exec`. fx asks before it trusts
+# a changed fnox.toml, and gives fnox a 1Password service account that can only
+# read the Dev vault. A project could ask for any other item with a full op://
+# address; the service account is what stops that.
+[providers.op]
+type = "1password"
+vault = "Dev"

@@ -1,0 +1,64 @@
+{
+  "cleanupPeriodDays": 180,
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "skipAutoPermissionPrompt": true,
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true
+  },
+  "model": "opus",
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": {},
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "autoCompactWindow": 500000,
+  "autoUpdatesChannel": "latest",
+  "minimumVersion": "2.1.251",
+  "disableClaudeAiConnectors": true,
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "workflowKeywordTriggerEnabled": false,
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": false,
+    "ralph-loop@claude-plugins-official": true,
+    "compound-engineering@compound-engineering-plugin": true,
+    "agent-skills@addy-agent-skills": false
+  },
+  "extraKnownMarketplaces": {
+    "compound-engineering-plugin": {
+      "source": {
+        "source": "github",
+        "repo": "EveryInc/compound-engineering-plugin"
+      }
+    },
+    "addy-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills"
+      }
+    }
+  },
+  "spellcheck": {
+    "enabled": true,
+    "checker": "auto",
+    "language": "en_US"
+  },
+  "tui": "fullscreen",
+  "theme": "dark-ansi",
+  "editorMode": "normal",
+  "verbose": false,
+  "autoMemoryEnabled": false,
+  "fileCheckpointingEnabled": true,
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": false
+}

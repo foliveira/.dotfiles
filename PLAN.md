@@ -8,6 +8,26 @@ decision below was settled in review; the few still open are listed under
 Tool versions and behaviour quoted here were checked in November 2026. Recheck
 anything version-specific at the start of the phase that uses it.
 
+## Status
+
+The code for phases 1 to 8 is merged. What is left needs a laptop, the user,
+or the homelab repo:
+
+- Public keys. `allowed_signers` (3.2), the tracked `signingkey` (3.1) and the
+  ssh `Host github.com` block with `github.pub` (3.5) wait for the public
+  halves of the "Github Signing" and "Github" keys. Until then the signing key
+  goes in `dotfiles-local/shared/gitconfig`, and `dot` skips the signature
+  check with a warning.
+- The private repo (3.3): create `dotfiles-local`, move the old `*.local`
+  files into it, then run `install.sh --machine NAME --local-repo URL`.
+- The dev vault and its service account token in the Keychain (4.1).
+- Checks on a laptop: shellcheck and shfmt (CI runs them too), nub refusing a
+  version published today (4.5), the Claude sandbox failing closed (5.7), tmux
+  and herdr keys, `install.sh --homelab` on the homelab Mac (6.2), first runs
+  of BlockBlock and LuLu (6.4), and whether macOS ships `/usr/bin/trash` (2.7).
+- Atuin's `sync_address` once the server runs (6.3, H8).
+- Homelab items H1 to H9.
+
 ## Machines
 
 | Machine | Role | Install |
@@ -49,7 +69,7 @@ Settled:
 | herdr | Kept on the laptops. |
 | Signer | `op-ssh-sign` stays. One agent path per OS is no longer needed. |
 | Identity | Name, noreply email, signing key and `allowed_signers` are tracked. Work-org email rules live in the private companion repo, so org names stay out of this public one. |
-| Machine-local config | A private `dotfiles-local` repo, one folder per machine plus `shared/`, linked to `~/.config/local/`. It holds private settings, never secrets. |
+| Machine-local config | A private `dotfiles-local` repo, one folder per machine plus `shared/`. The machine's folder is linked to `~/.config/local/` and `shared/` to `~/.config/local-shared/`. It holds private settings, never secrets. |
 | Secrets in local files | None. Secrets stay in 1Password and are read when needed. |
 | Leak guard | hk pre-commit in this repo: gitleaks plus a local deny-list of names that must never be committed. |
 | Spellcheck | hunspell, with `spellcheck.checker: "auto"` and an explicit `spellcheck.language`. |
@@ -79,8 +99,8 @@ Four Brewfiles:
 
 | File | Machines | Contents |
 |---|---|---|
-| `Brewfile` | all | git, stow, tmux, neovim, starship, fzf, ripgrep, fd, jq, mise, gh, zsh-autosuggestions, zsh-syntax-highlighting, zsh-completions |
-| `Brewfile.dev` | laptops | nub, fnox, `cask "1password-cli"`, herdr, lazygit, bat, eza, zoxide, atuin, btop, tealdeer, shellcheck, shfmt, yq, uv, git-delta, actionlint, hadolint, watchexec, xh, trash, mas, mactop, hunspell |
+| `Brewfile` | all | git, git-delta, stow, tmux, neovim, starship, fzf, ripgrep, fd, jq, mise, gh, zsh-autosuggestions, zsh-syntax-highlighting, zsh-completions |
+| `Brewfile.dev` | laptops | nub, node@24 (for pi), fnox, `cask "1password-cli"`, herdr, lazygit, bat, eza, zoxide, atuin, btop, tealdeer, shellcheck, shfmt, yq, uv, actionlint, hadolint, watchexec, xh, trash, mas, mactop, hunspell |
 | `Brewfile.desktop` | laptops | ghostty, zed, 1password, tailscale-app, font-jetbrains-mono-nerd-font, blockblock, lulu, pearcleaner |
 | `Brewfile.homelab` | homelab Mac | orbstack, smartmontools, gdu |
 
@@ -105,12 +125,13 @@ dotfiles-local/
 ```
 
 - `install.sh` clones it next to this repo when missing, then links
-  `~/.config/local/` to the machine's folder. The folder name comes from a
+  `~/.config/local/` to the machine's folder and `~/.config/local-shared/` to
+  `shared/`. The folder name comes from a
   `--machine` flag on first install, recorded with the profile.
 - Each folder may contain `gitconfig`, `ssh_config`, `env.zsh`, `tmux.conf`
   and `mise.toml`. The tracked configs include them, with `shared/` loaded
   before the machine's own file:
-  - git: `[include]` of `~/.config/local/shared/gitconfig`, then
+  - git: `[include]` of `~/.config/local-shared/gitconfig`, then
     `~/.config/local/gitconfig`, both last so they win;
   - ssh: `Include ~/.config/local/ssh_config` first, because ssh keeps the
     first value it sees;
@@ -209,8 +230,9 @@ Editing a trusted `mise.toml`, including through `git pull`, revokes trust
 until you run `mise trust` again.
 
 nub:
-- `~/.npmrc` (stowed from `shell/`) with `advisoryCheck=required` and the
-  7-day release age. nub's `nub.jsonc` release-age keys apply only when nub is
+- `~/.npmrc` with `advisoryCheck=required` and `minimumReleaseAge=7d`.
+  `install.sh` adds the lines when missing. The file is not stowed, because
+  `npm login` writes tokens into it. nub's `nub.jsonc` release-age keys apply only when nub is
   the project's package manager, so they are not used. Check the exact
   `.npmrc` key names and value format against nubjs.com/docs/config, and test
   that installing a version published today is refused in an npm-lockfile
@@ -241,7 +263,7 @@ Per-repo tools such as hk and cocogitto go in each repo's `mise.toml`.
   from the base, so changes made through `/config` can be copied back. If
   `~/.claude/settings.json` is still a stow symlink, it becomes a regular file
   first.
-- `agents/CLAUDE.md` holds global agent instructions, stowed to
+- `agents/.claude/CLAUDE.md` holds global agent instructions, stowed to
   `~/.claude/CLAUDE.md` on the laptops and installed in the container as
   `/etc/claude-code/CLAUDE.md`.
 - herdr: `brew "herdr"` in `Brewfile.dev`. `agents/.config/herdr/config.toml`
@@ -300,44 +322,44 @@ Per-repo tools such as hk and cocogitto go in each repo's `mise.toml`.
 
 Safe on the laptops today.
 
-- [ ] 1.1 `git/.gitconfig`: move the `[include]` of `~/.gitconfig.local` to the
+- [x] 1.1 `git/.gitconfig`: move the `[include]` of `~/.gitconfig.local` to the
   end so local values override.
-- [ ] 1.2 `shell/.zprofile`: export `XDG_CONFIG_HOME="$HOME/.config"` (lazygit
+- [x] 1.2 `shell/.zprofile`: export `XDG_CONFIG_HOME="$HOME/.config"` (lazygit
   on macOS ignores `~/.config/lazygit` without it) and
   `EDITOR=nvim VISUAL=nvim`.
-- [ ] 1.3 Themes:
+- [x] 1.3 Themes:
   - Zed: `"auto_install_extensions": { "catppuccin": true }`.
   - `install.sh`: fetch btop's `catppuccin_mocha.theme` and atuin's
     `catppuccin-mocha-mauve.toml` when those tools exist.
   - `atuin/config.toml:17`: `name = "catppuccin-mocha-mauve"`.
   - `install.sh:67-77`: drop the bat theme download; bat 0.26 ships Catppuccin.
-- [ ] 1.4 `macos/set-hostname.sh:29`: `HostName` uses `$local_name`.
-- [ ] 1.5 `bin/bin/dot`: `all` runs pull, then install, instead of running
+- [x] 1.4 `macos/set-hostname.sh:29`: `HostName` uses `$local_name`.
+- [x] 1.5 `bin/bin/dot`: `all` runs pull, then install, instead of running
   `brew bundle` twice. Find the repo through `readlink -f "$0"`.
-- [ ] 1.6 `install.sh:41`: `${src#"$DOTFILES/$pkg/"}` (shellcheck SC2295).
-- [ ] 1.7 `install.sh:43`: also back up foreign symlinks, so stow doesn't
+- [x] 1.6 `install.sh:41`: `${src#"$DOTFILES/$pkg/"}` (shellcheck SC2295).
+- [x] 1.7 `install.sh:43`: also back up foreign symlinks, so stow doesn't
   abort on them.
-- [ ] 1.8 `git/.gitignore_global`: add `.env`, `.env.local`,
+- [x] 1.8 `git/.gitignore_global`: add `.env`, `.env.local`,
   `fnox.local.toml`, `mise.local.toml`.
-- [ ] 1.9 `shell/.config/ghostty/config`: `macos-option-as-alt = left`.
+- [x] 1.9 `shell/.config/ghostty/config`: `macos-option-as-alt = left`.
 
 Done when: shellcheck is clean, and on a laptop after `./install.sh` the themes
 show and `echo $EDITOR` prints `nvim`.
 
 ## Phase 2: layout and tiers
 
-- [ ] 2.1 `test/smoke.sh`, written first: stows into a throwaway HOME on macOS
+- [x] 2.1 `test/smoke.sh`, written first: stows into a throwaway HOME on macOS
   and checks that a zsh login prints nothing to stderr, `$EDITOR` is `nvim`,
   and a local git value overrides the shared one. Later phases add checks.
-- [ ] 2.2 Split the Brewfile into the four files under
+- [x] 2.2 Split the Brewfile into the four files under
   [Repo layout and tiers](#repo-layout-and-tiers). Remove direnv, dust, duf,
   pam-reattach and the `claude-code@latest` cask.
-- [ ] 2.3 `install.sh`: `--full` and `--homelab` profiles, recorded in
+- [x] 2.3 `install.sh`: `--full` and `--homelab` profiles, recorded in
   `~/.config/dotfiles/profile`; back up `~/.tmux.conf` with the other
   conflicting files; drop the Linux warning.
-- [ ] 2.4 Rename the `claude` stow package to `agents`.
-- [ ] 2.5 `shell/.config/ghostty/config`: delete the `command` line.
-- [ ] 2.6 `shell/.zshrc`: use `$HOMEBREW_PREFIX`.
+- [x] 2.4 Rename the `claude` stow package to `agents`.
+- [x] 2.5 `shell/.config/ghostty/config`: delete the `command` line.
+- [x] 2.6 `shell/.zshrc`: use `$HOMEBREW_PREFIX`.
 - [ ] 2.7 Check whether macOS already ships `/usr/bin/trash`. If it does, drop
   the `trash` formula.
 
@@ -357,18 +379,18 @@ installs only core and homelab packages.
   tmux `local.conf` into it, and the work-org `includeIf` rules into
   `shared/gitconfig`. Move any secret values found along the way into
   1Password.
-- [ ] 3.4 `install.sh`: clone `dotfiles-local`, link `~/.config/local/`,
+- [x] 3.4 `install.sh`: clone `dotfiles-local`, link `~/.config/local/`,
   `--machine` flag, and the includes listed under
   [Machine-local config](#machine-local-config). Replace
   `gitconfig.local.example` and `config.local.example` with `local.example/`.
 - [ ] 3.5 `ssh/.ssh/config`: `Include ~/.config/local/ssh_config` first;
   `Match exec` guard around `IdentityAgent`; the `Host github.com` block;
   `ssh/.ssh/github.pub`.
-- [ ] 3.6 Leak guard: `mise.toml` with hk and gitleaks, `hk.pkl` with the
+- [x] 3.6 Leak guard: `mise.toml` with hk and gitleaks, `hk.pkl` with the
   gitleaks and deny-list checks.
-- [ ] 3.7 `dot`: signature check for this repo and `dotfiles-local`,
+- [x] 3.7 `dot`: signature check for this repo and `dotfiles-local`,
   `dot upgrade`, `dot doctor`, as under [`dot`](#dot-r11).
-- [ ] 3.8 Smoke test: a throwaway `ssh-agent` and key, `gpg.ssh.program`
+- [x] 3.8 Smoke test: a throwaway `ssh-agent` and key, `gpg.ssh.program`
   overridden to `ssh-keygen`. A signed commit verifies, and the `dot` check
   accepts a signed merge but rejects an unsigned or wrongly signed commit on
   `master`.
@@ -381,14 +403,14 @@ remain in home folders, and a commit containing a deny-listed name is blocked.
 
 - [ ] 4.1 Create the dev vault and its service account. Store the token in the
   Keychain on each laptop.
-- [ ] 4.2 `shell/.config/fnox/config.toml` with the 1Password provider using
+- [x] 4.2 `shell/.config/fnox/config.toml` with the 1Password provider using
   the service account; `bin/fx`.
-- [ ] 4.3 Remove direnv everywhere. `new-project` writes `mise.toml` and
+- [x] 4.3 Remove direnv everywhere. `new-project` writes `mise.toml` and
   `fnox.toml` templates and trusts its `mise.toml`.
-- [ ] 4.4 `shell/.config/mise/config.toml` as under
+- [x] 4.4 `shell/.config/mise/config.toml` as under
   [Project tools](#project-tools-r3-r4). Fix the `status` comment.
 - [ ] 4.5 `~/.npmrc` for nub, and the release-age test.
-- [ ] 4.6 `.zshrc`: `alias npx=nubx`.
+- [x] 4.6 `.zshrc`: `alias npx=nubx`.
 
 Done when: `cd ~ && mise ls --current` prints nothing, entering a trusted
 project installs its tools, `fx` asks once per `fnox.toml` change, and nub
@@ -396,15 +418,15 @@ refuses a version published today.
 
 ## Phase 5: Claude, herdr and keys
 
-- [ ] 5.1 `agents/claude-settings.json` and the merge-with-drift step in
+- [x] 5.1 `agents/claude-settings.json` and the merge-with-drift step in
   `install.sh`. Claude installed by the official installer.
-- [ ] 5.2 `agents/CLAUDE.md` from `claude/CLAUDE.md.example`, filled in.
-- [ ] 5.3 herdr config with the Colemak keys; integrations installed after
+- [x] 5.2 `agents/.claude/CLAUDE.md` from `claude/CLAUDE.md.example`, filled in.
+- [x] 5.3 herdr config with the Colemak keys; integrations installed after
   the merge.
-- [ ] 5.4 pi through nub, and its settings merge.
-- [ ] 5.5 tmux: the keys from the table, `set-clipboard external`, OSC 52
+- [x] 5.4 pi through nub, and its settings merge.
+- [x] 5.5 tmux: the keys from the table, `set-clipboard external`, OSC 52
   copy, the companion repo's `tmux.conf`, `tmux-sensible` dropped, TPM guarded.
-- [ ] 5.6 Smoke test: merge, then herdr integration, then merge again leaves
+- [x] 5.6 Smoke test: merge, then herdr integration, then merge again leaves
   exactly one herdr hook and every base key, and the drift report lists a
   changed key.
 - [ ] 5.7 On a laptop: bare `claude` runs commands inside the sandbox, and with
@@ -416,38 +438,38 @@ config with `herdr server reload-config`.
 
 ## Phase 6: upkeep and homelab Mac
 
-- [ ] 6.1 `macos/homelab.sh` with the `pmset` settings.
+- [x] 6.1 `macos/homelab.sh` with the `pmset` settings.
 - [ ] 6.2 Run `install.sh --homelab` on the homelab Mac, with the checkout in
   that Mac's home folder, outside `/Volumes/Homelab` (whose subfolders are
   mounted into containers).
-- [ ] 6.3 git-delta config; Atuin `sync_address` in
+- [ ] 6.3 git-delta config (done); Atuin `sync_address` in
   `dotfiles-local/shared/env.zsh` once the server runs.
 - [ ] 6.4 First run of BlockBlock and LuLu on each laptop; allow the expected
   agents and connections.
-- [ ] 6.5 starship: `$username$hostname` at the start (shown only over SSH).
-- [ ] 6.6 ripgreprc: drop the `dist/`, `build/`, `target/` and `coverage/`
+- [x] 6.5 starship: `$username$hostname` at the start (shown only over SSH).
+- [x] 6.6 ripgreprc: drop the `dist/`, `build/`, `target/` and `coverage/`
   globs.
-- [ ] 6.7 Zed: delete `session.trust_all_worktrees`.
-- [ ] 6.8 Optional: `.editorconfig` as the only source of indentation rules.
+- [x] 6.7 Zed: delete `session.trust_all_worktrees`.
+- [ ] 6.8 Optional, not done: `.editorconfig` as the only source of indentation rules.
   Check `:verbose set sw? et?` first.
 
 Done when: `dot doctor` passes on all three Macs.
 
 ## Phase 7: docs
 
-- [ ] 7.1 `README.md`: bootstrap per profile; the tier table; a cheat sheet by
+- [x] 7.1 `README.md`: bootstrap per profile; the tier table; a cheat sheet by
   tier; signing and the `dot` check; merging agent branches on a laptop;
   secrets with fnox and `fx`; project tools with mise, nub and per-repo tools;
   Claude settings and drift; herdr; the keyboard table; the companion repo
   and the leak guard; fixes left from the review (theme table, bat
   path, `yq`, the Ghostty tmux line, the `set-hostname` example, the
   "Colemak-friendly" line).
-- [ ] 7.2 Code comments that describe old behaviour, including the Zed comment
+- [x] 7.2 Code comments that describe old behaviour, including the Zed comment
   in `defaults.sh`.
 
 ## Phase 8: CI
 
-- [ ] 8.1 `.github/workflows/ci.yml` on `macos-latest`: shellcheck, shfmt,
+- [x] 8.1 `.github/workflows/ci.yml` on `macos-latest`: shellcheck, shfmt,
   actionlint, gitleaks over the full history, and `test/smoke.sh`.
 
 ## Homelab repo changes
@@ -473,7 +495,7 @@ lost. The first item closes R11 for the homelab and should come first.
 - [ ] H4. Fetch `agents/claude-settings.json` at the same pin and apply a
   container overlay with jq at build time (sandbox off, Paseo-specific keys).
   The entrypoint keeps replacing `~/.claude/settings.json` on start.
-- [ ] H5. Install `agents/CLAUDE.md` as `/etc/claude-code/CLAUDE.md`.
+- [ ] H5. Install `agents/.claude/CLAUDE.md` as `/etc/claude-code/CLAUDE.md`.
 - [ ] H6. zsh, fzf and starship in the image, zsh as the login shell, and the
   shell files fetched at the same pin. Don't link them from `~/dev`, which
   agents can write.
@@ -487,12 +509,8 @@ lost. The first item closes R11 for the homelab and should come first.
 - `GH_TOKEN` scopes in the container: check them in GitHub's developer
   settings. H1 replaces the token either way; the scopes decide how urgent H1
   is.
-- Node for pi on the laptops. pi needs Node 22.19 or later on PATH, and with
-  `paranoid`, `mise x node@<pin> -- pi` fails in untrusted repos.
-  Recommendation: Homebrew's keg-only `node@24` in `Brewfile.dev`, with `pi`
-  started through a small `bin/pi` that puts that Node first on PATH.
-- Which hunspell dictionaries to install, and the `spellcheck.language` to
-  set. Decide in 5.1.
+- Settled in Phase 5: pi runs with Homebrew's keg-only `node@24` through
+  `bin/pi`, and spellcheck uses the en_US dictionary.
 
 ## Considered and not doing
 

@@ -1,47 +1,22 @@
-# CLI essentials
+# Core: installed on every Mac (laptops and the homelab Mac).
+# install.sh installs this file first, then the files for the machine's profile:
+#   --full     Brewfile + Brewfile.dev + Brewfile.desktop  (laptops)
+#   --homelab  Brewfile + Brewfile.homelab                 (homelab Mac)
+
 brew "git"
+brew "git-delta"   # git's pager; here because .gitconfig uses it on every Mac
 brew "stow"
+brew "tmux"
+brew "neovim"
+brew "starship"
 brew "fzf"
 brew "ripgrep"
 brew "fd"
-brew "bat"
-brew "eza"
 brew "jq"
-brew "tealdeer"
-brew "zoxide"
-brew "direnv"
-brew "atuin"
-brew "gh"
-brew "shellcheck"
 brew "mise"
-brew "lazygit"
-brew "btop"
-brew "dust"
-brew "duf"
-brew "pam-reattach"
+brew "gh"
 
-# Editors / shell
-brew "neovim"
-brew "starship"
-brew "tmux"
-
-# zsh ergonomics — sourced from .zshrc when present
+# zsh plugins, sourced from .zshrc when present
 brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
 brew "zsh-completions"
-
-# Casks
-cask "ghostty"
-cask "zed"
-cask "claude-code@latest"
-cask "1password"
-cask "1password-cli"
-cask "tailscale-app"
-#cask "orbstack"
-
-# Fonts
-cask "font-jetbrains-mono-nerd-font"
-
-# Mac App Store apps — uncomment after `brew install mas` and signing in.
-# brew "mas"
-# mas "1Password 7", id: 1333542190

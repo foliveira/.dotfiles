@@ -9,11 +9,8 @@ setopt HIST_FIND_NO_DUPS HIST_EXPIRE_DUPS_FIRST SHARE_HISTORY
 setopt AUTO_CD INTERACTIVE_COMMENTS NO_BEEP
 bindkey -e
 
-# Homebrew prefix — set by .zprofile via `brew shellenv`. Fall back if running
-# zsh in a context where .zprofile didn't run (e.g. some IDE terminals).
-brew_prefix="${HOMEBREW_PREFIX:-}"
-[[ -z "$brew_prefix" && -d /opt/homebrew ]] && brew_prefix=/opt/homebrew
-[[ -z "$brew_prefix" && -d /usr/local/Homebrew ]] && brew_prefix=/usr/local
+# Homebrew's prefix, set by `brew shellenv` in .zprofile.
+brew_prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
 
 # zsh-completions — must be on FPATH before compinit runs.
 [[ -d "$brew_prefix/share/zsh-completions" ]] && fpath=("$brew_prefix/share/zsh-completions" $fpath)
@@ -25,6 +22,9 @@ zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*:descriptions' format '%F{yellow}%d%f'
+
+# herdr: tab completion for its commands.
+command -v herdr >/dev/null && source <(herdr completion zsh)
 
 # Aliases
 alias g='git'
@@ -69,11 +69,14 @@ fi
 # zoxide — smart cd. `z foo` jumps to a frecency-ranked match, `zi` is interactive.
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
-# direnv — auto-loads .envrc when entering a directory that has one.
-command -v direnv >/dev/null && eval "$(direnv hook zsh)"
-
-# mise — language version manager. Activates per-project .tool-versions / mise.toml.
+# mise: puts each project's tools on PATH when you enter it, and installs
+# missing ones (see ~/.config/mise/config.toml). Nothing is active outside
+# projects.
 command -v mise >/dev/null && eval "$(mise activate zsh)"
+
+# nub replaces npm. nubx prefers local bins, asks before downloading a package,
+# and skips its install scripts.
+command -v nubx >/dev/null && alias npx=nubx
 
 # atuin — better history search on Ctrl-R. Up-arrow stays as plain zsh history
 # (atuin's up-arrow takeover is intrusive; the picker is the real value).
@@ -96,5 +99,10 @@ fi
 
 unset brew_prefix
 
-# Machine-local secrets and overrides — never committed.
-[[ -f "$HOME/.localrc" ]] && source "$HOME/.localrc"
+# Machine settings from the private config repo: shared, then this machine.
+# No secrets there; read them from 1Password when needed (op read, fx).
+# ~/.localrc is the old place and goes away once its contents move.
+for f in "$HOME/.config/local-shared/env.zsh" "$HOME/.config/local/env.zsh" "$HOME/.localrc"; do
+    [[ -f "$f" ]] && source "$f"
+done
+unset f

@@ -1,0 +1,46 @@
+# Git settings that work on any machine. ~/.gitconfig includes this file.
+# The Paseo container's image also downloads it (at a fixed commit), so keep
+# Mac-only things (1Password, delta, nvim) out of here.
+
+[init]
+    defaultBranch = master
+
+[pull]
+    rebase = true
+
+[rebase]
+    autoStash = true
+
+[push]
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[branch]
+    sort = -committerdate
+
+[diff]
+    algorithm = histogram
+    colorMoved = default
+
+[merge]
+    conflictStyle = zdiff3
+
+[rerere]
+    enabled = true
+
+[tag]
+    sort = version:refname
+
+# Clone GitHub repos over HTTPS (works before 1Password is set up), push over
+# SSH (signed with the 1Password key).
+[url "git@github.com:"]
+    pushInsteadOf = https://github.com/
+
+[alias]
+    co = checkout
+    sw = switch
+    st = status -sb
+    lg = log --oneline --graph --decorate --all
+    last = log -1 HEAD

@@ -1,454 +1,355 @@
 # dotfiles
 
-macOS configs managed with [GNU stow](https://www.gnu.org/software/stow/).
-Catppuccin Mocha throughout, JetBrainsMono Nerd Font Mono, Colemak-friendly,
-keyboard-first.
+Settings for my Macs, linked into place with
+[GNU stow](https://www.gnu.org/software/stow/). The theme is Catppuccin Mocha,
+the font is JetBrainsMono Nerd Font Mono, and the keyboard layout is Colemak.
 
----
+## Machines and profiles
 
-## Bootstrap
+There are three Macs. Each one uses a profile:
+
+| Mac | Profile | Brewfiles | Stow packages |
+|---|---|---|---|
+| Personal laptop | `--full` | `Brewfile`, `Brewfile.dev`, `Brewfile.desktop` | `shell git ssh bin agents` |
+| Work laptop | `--full` | the same | the same |
+| Homelab Mac (runs the Docker containers) | `--homelab` | `Brewfile`, `Brewfile.homelab` | `shell git ssh bin` |
+
+- `Brewfile` (core): git, git-delta, stow, tmux, neovim, starship, fzf, rg, fd,
+  jq, mise, gh and the zsh plugins.
+- `Brewfile.dev`: tools for coding and agents.
+- `Brewfile.desktop`: apps with a window, and the font.
+- `Brewfile.homelab`: OrbStack, smartmontools and gdu.
+
+The Paseo container on the homelab Mac does not use this repo directly. The
+homelab repo copies a few files from it at a fixed commit (see
+[PLAN.md](PLAN.md#homelab-repo-changes)).
+
+## Set up a new Mac
 
 ```bash
-git clone <this-repo> ~/.dotfiles
+git clone git@github.com:foliveira/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-./install.sh
+./install.sh --full --machine personal --local-repo <URL of dotfiles-local>
 ```
 
-`install.sh` does, in order:
+On the homelab Mac, use `--homelab --machine homelab`. Keep the clone in the
+home folder, not in `/Volumes/Homelab`, whose folders are mounted into
+containers.
 
-1. Installs Homebrew if missing.
-2. Runs `brew bundle` against the [Brewfile](Brewfile).
-3. Backs up any pre-existing files into `~/.dotfiles-backup/<timestamp>/`
-   (walks the full per-package tree).
-4. Symlinks every package into `$HOME` with `stow -R --no-folding`.
-5. Clones [TPM](https://github.com/tmux-plugins/tpm) into `~/.config/tmux/plugins/`.
-6. Fetches Catppuccin Mocha themes for bat, eza, and nvim.
+`install.sh` is safe to run again. It saves the profile and machine in
+`~/.config/dotfiles/profile`, so later runs need no flags. It does this:
 
-After the bootstrap, do the [first-run setup](#first-run-setup).
+1. Installs Homebrew if it is missing.
+2. Runs `brew bundle` for the profile's Brewfiles. It installs what is
+   missing and does not upgrade anything (`dot upgrade` does that).
+3. Moves files that are in the way to `~/.dotfiles-backup/<time>/`.
+4. Links the stow packages into `$HOME` with `stow -R --no-folding`.
+5. Links the private config repo (see [Private settings](#private-settings)).
+6. Adds nub's safety settings to `~/.npmrc` (laptops).
+7. On the laptops: installs Claude Code, merges the Claude and pi settings,
+   downloads the hunspell dictionaries, installs pi and the herdr hooks.
+8. Installs TPM and downloads the Catppuccin themes that tools don't ship.
 
----
+## First run on a laptop
 
-## First-run setup
+Do these once, in this order.
 
-Once per machine. Order matters — 1Password creates the SSH key whose
-public half then goes into `~/.gitconfig.local`.
+1. **1Password.** Settings, Developer: turn on "Use the SSH agent" and
+   "Integrate with 1Password CLI". `~/.ssh/config` already uses the agent.
+2. **Signing key.** On GitHub, add the "Github Signing" key from 1Password as
+   a signing key. Put its public half in `dotfiles-local/shared/gitconfig` as
+   `user.signingkey`, and in `git/.config/git/allowed_signers`.
+3. **macOS settings.** `bash macos/defaults.sh`, then log out. The Safari part
+   needs Full Disk Access for the terminal; the rest works without it.
+4. **Touch ID for sudo** (optional). `bash macos/touchid-sudo.sh`. It also
+   installs pam-reattach, so Touch ID works inside tmux.
+5. **Name** (optional). `bash macos/set-hostname.sh work-mbp`.
+6. **Logins.** `gh auth login` (pick SSH), `claude`, and `atuin login` once
+   the homelab Atuin server runs.
+7. **Firewall apps.** Open BlockBlock and LuLu once and allow what you expect.
+8. **This repo's hooks.** In `~/.dotfiles`: `mise trust && mise install &&
+   hk install`.
 
-### 1 — 1Password SSH agent
+On the homelab Mac, run `bash macos/homelab.sh` instead of `defaults.sh`. It
+stops the Mac from sleeping and turns it on again after a power cut.
 
-1. 1Password → Settings → Developer.
-2. Enable **Use the SSH agent** and **Integrate with 1Password CLI**.
-3. Create or import an SSH key (Ed25519 recommended).
-4. On GitHub → Settings → SSH and GPG keys, add the same key twice:
-   once as **Authentication Key**, once as **Signing Key**.
+## Keep Macs in step: `dot`
 
-The `IdentityAgent` line for 1Password is already in the stowed
-`~/.ssh/config`. Anything host-specific (work bastions, alternate
-GitHub identities, ProxyJump chains) goes into a gitignored
-`~/.ssh/config.local` — copy [`ssh/config.local.example`](ssh/config.local.example)
-and fill in.
+| Command | What it does |
+|---|---|
+| `dot` | Checks the signatures of new commits, pulls this repo and the private repo, and runs `install.sh`. |
+| `dot upgrade` | `dot`, and also upgrades Homebrew packages and App Store apps, then cleans up. |
+| `dot doctor` | Checks Homebrew, the signing key, disk space, SSD health (homelab) and private files. |
+| `dot trust` | Shows commits that failed the check and applies them if you say yes. |
+| `dot install` | Runs `install.sh` without pulling. |
 
-### 2 — Git identity
+### The signature check
+
+Agents in the Paseo container can push to GitHub, so `dot` does not trust
+GitHub. Before it pulls, it checks every commit on master's main line (the
+first parent of each merge). Each one must be signed by a key in
+`git/.config/git/allowed_signers`. Only the laptops' key goes in that file.
+
+So agent work reaches master only through a merge made on a laptop:
 
 ```bash
-cp git/gitconfig.local.example ~/.gitconfig.local
-$EDITOR ~/.gitconfig.local
+git fetch origin agent-branch
+git merge --no-ff origin/agent-branch   # signed by 1Password
+git push
 ```
 
-Set `name`, `email`, and paste your 1Password SSH **public** key as
-`signingkey` (use 1Password's "Copy Public Key" on the SSH key item).
-Signing format, helper program, and `commit.gpgsign = true` are already
-in [`git/.gitconfig`](git/.gitconfig).
+A fast-forward, a commit made in the container, and GitHub's merge button all
+fail the check. If that happens, read the commits and run `dot trust`.
 
-### 3 — macOS defaults
+While `allowed_signers` has no keys, `dot` skips the check and warns.
+
+## Secrets: fnox and `fx`
+
+Secrets stay in 1Password. A project lists the ones it needs in `fnox.toml`:
+
+```toml
+[secrets]
+DATABASE_URL = { provider = "op", value = "My App/database-url" }
+```
+
+Run a command with them:
 
 ```bash
-bash macos/defaults.sh
+fx -- nub run dev
 ```
 
-Sets Finder/Dock/screenshots/animations, switches input source to
-**English Colemak only**, enables auto light/dark, disables hot corners,
-installs the CapsLock-as-Ctrl LaunchAgent, creates `~/Developer/`.
-Logout for the keyboard layout and appearance to fully apply.
+`fx` reads the token for the 1Password "Dev" vault from the macOS Keychain
+and passes it to `fnox exec`. A `fnox.toml` can run commands, so `fx` asks
+before it uses a new or changed one. Answers are kept in
+`~/.local/state/fx/approved`. `fx --approve` approves without running
+anything.
 
-The Safari block needs **Full Disk Access** for the calling terminal
-(System Settings → Privacy & Security → Full Disk Access). The script
-soft-fails on Safari and warns if FDA isn't granted; the rest still
-applies.
-
-### 4 — Touch ID for sudo (optional, recommended)
+Store the token once. It is a 1Password service account token for the Dev
+vault:
 
 ```bash
-bash macos/touchid-sudo.sh
+security add-generic-password -s fnox-dev-vault -a "$USER" -w
 ```
 
-Enables Touch ID for sudo via `/etc/pam.d/sudo_local` (Sonoma+;
-persists across system updates). Installs `pam-reattach` so the prompt
-surfaces correctly from inside tmux/screen — without it, sudo silently
-falls through to a password prompt.
+`FNOX_PROMPT_AUTH=false` stops fnox from running a login command from a
+project file. Secrets are never written to `.env` files.
 
-### 5 — Hostname (optional)
+## Project tools: mise, nub and per-repo tools
 
-```bash
-bash macos/set-hostname.sh "Fabio's MacBook"
-```
+- **mise** installs the tools a project lists in `mise.toml` when you `cd`
+  into it. Nothing is installed globally. It runs in `paranoid` mode: a new or
+  changed `mise.toml` does nothing until you run `mise trust`. Releases
+  younger than 7 days are not installed. mise reads `.node-version` too.
+- **nub** replaces npm. `~/.npmrc` has `advisoryCheck=required` and
+  `minimumReleaseAge=7d`. `npx` is an alias for `nubx`, which skips install
+  scripts. `npm login` still writes its token to `~/.npmrc`, which is why
+  that file is not in this repo.
+- **hk, cocogitto, gitleaks and similar** belong to each repo, pinned in its
+  `mise.toml`. This repo does that for hk, gitleaks, shellcheck, shfmt and
+  actionlint.
+- **`new-project <name> [parent]`** makes a folder (in `~/Developer` by
+  default) with git, a `.gitignore`, `mise.toml`, `fnox.toml`, a README and a
+  first commit.
 
-Sets `HostName`, `LocalHostName` (sanitised for Bonjour), and
-`ComputerName`.
+## Agents
 
-### 6 — Personal CLAUDE.md (optional)
+### Claude Code
 
-```bash
-cp claude/CLAUDE.md.example ~/.claude/CLAUDE.md
-$EDITOR ~/.claude/CLAUDE.md
-```
+`agents/claude-settings.json` is one set of settings for the laptops and the
+container. It is not linked. `install.sh` merges it into
+`~/.claude/settings.json`:
 
-The committed [`claude/.claude/settings.json`](claude/.claude/settings.json)
-carries plugin selections, permissions, and marketplaces — they follow
-you across machines. Personal context lives in the gitignored
-`~/.claude/CLAUDE.md`.
+- Keys in the repo win.
+- Keys only the Mac has (herdr's hooks, for example) stay.
+- Before writing, it prints each key whose value on the Mac is different. If
+  you changed something in `/config` and want to keep it, copy it into the repo
+  file.
 
----
+The settings turn on Claude's sandbox and refuse to run commands if the sandbox
+can't start. Spellcheck uses hunspell with the en_US dictionary.
 
-## Tools cheat sheet
+`agents/.claude/CLAUDE.md` holds the instructions for every session. It is
+linked to `~/.claude/CLAUDE.md`.
 
-Everything below is installed by `./install.sh` and pre-configured.
-Configs live in `~/.config/<tool>/`; key bindings called out per tool.
+Claude Code comes from the official installer and updates itself.
 
-### Terminal & shell
+### pi
 
-- **Ghostty** — [`config`](shell/.config/ghostty/config).
-  Catppuccin Mocha, hidden titlebar with 92% opacity, JetBrainsMono
-  Nerd Font Mono 13pt. Auto-launches tmux on startup
-  (`command = tmux new-session -A -s main`).
-- **zsh** — [`.zshrc`](shell/.zshrc), [`.zprofile`](shell/.zprofile).
-  100k history, shared across sessions; `bindkey -e` (emacs).
-  Aliases: `g` = git, `ts` = tailscale, `ll`/`la`/`lt` = eza variants,
-  `cat` = bat. Sources `~/.localrc` for machine-local secrets.
-- **starship** — [`config`](shell/.config/starship.toml).
-  Two-line prompt: `dir on branch ✗ via lang` then `❯`. Catppuccin
-  Mocha palette block; mauve branch, sky character.
+pi is installed with nub. It needs Node 22.19 or later, so `bin/pi` starts it
+with Homebrew's `node@24`, which is not on `PATH` otherwise. Its settings come
+from `agents/pi-settings.json`, merged like Claude's.
 
-### Multiplexer
+### herdr
 
-- **tmux** — [`config`](shell/.config/tmux/tmux.conf).
-  Prefix is **Ctrl-a**. `Ctrl-a Ctrl-a` sends a literal Ctrl-a so
-  readline's beginning-of-line still works.
-  - `prefix + -` — split horizontal divider (panes stacked).
-  - `prefix + /` — split vertical divider (panes side-by-side).
-  - `prefix + c` — new window in current path.
-  - `prefix + r` — reload config.
-  - `prefix + [`, then `v` to start, `y` to yank — copy mode (vi keys),
-    yanks to system clipboard via `pbcopy`.
-  - `prefix + I` — install plugins (TPM; first time only). Configured:
-    sensible, resurrect, continuum. Sessions auto-save every 15 min.
+herdr runs and watches agent sessions. Its settings are in
+`agents/.config/herdr/config.toml`. `install.sh` adds herdr's hooks for Claude
+and pi. Reload the settings with `herdr server reload-config`.
 
-### Editor
+## Keyboard
 
-- **Zed** — [`settings.json`](shell/.config/zed/settings.json).
-  Primary editor. Catppuccin Mocha, JetBrainsMono Nerd Font Mono 13pt,
-  vim mode on, format-on-save, 2-space tabs (4 for Python, 4 + tabs
-  for Go).
-- **Neovim** — [`init.lua`](shell/.config/nvim/init.lua).
-  Single-file Lua config for quick edits / commit messages / SSH.
-  Catppuccin Mocha colorscheme via nvim's native pack/start.
-  - Leader = space.
-  - `<space>w` write, `<space>q` quit, `<space>h` clear search.
-  - `<C-hjkl>` window navigation.
+Pane keys follow Colemak: `a` left, `r` down, `s` up, `w` right. The tmux
+prefix is `Ctrl-a`. The herdr prefix is `Ctrl-b`.
 
-### Git & GitHub
+| Action | tmux | herdr |
+|---|---|---|
+| Move to a pane | `prefix` + `a` `r` `s` `w` (press again without the prefix) | `prefix` + `a` `r` `s` `w`; plain `a` `r` `s` `w` in navigate mode |
+| Resize a pane | `prefix` + `A` `R` `S` `W` | resize mode: `prefix + m` |
+| Pick a session or workspace | `prefix + f` | `prefix + f` |
+| Settings | | `prefix + ,` |
+| Reload settings | `prefix + o` | `prefix + shift + r` |
+| Close pane / window, no question | `prefix + x` / `prefix + X` | |
+| Previous / next window | `prefix + <` / `prefix + >` | |
+| Split | `prefix + -` (one above the other), `prefix + /` (side by side) | |
+| New window | `prefix + c` | |
 
-- **git** — [`.gitconfig`](git/.gitconfig).
-  SSH-signed commits via 1Password; `pull.rebase`, `push.autoSetupRemote`,
-  `fetch.prune`, `rerere`, histogram diff with moved-block colouring,
-  `branch.sort=-committerdate`, `merge.conflictStyle=zdiff3`,
-  `tag.sort=version:refname`. Aliases: `co`, `sw`, `st` (short+branch),
-  `lg` (graph), `last`.
-- **gh** — [`config.yml`](shell/.config/gh/config.yml).
-  GitHub CLI. `git_protocol: ssh` so checkouts route through 1Password.
-  Aliases: `gh co` (pr checkout), `gh prv`, `gh prl`, `gh prc` (pr create),
-  `gh prd`, `gh rv` (review), `gh rw` (run watch), `gh rl`, `gh il`, `gh iv`.
-  First time: `gh auth login` and pick SSH.
-- **lazygit** — [`config.yml`](shell/.config/lazygit/config.yml).
-  TUI for staging hunks, reviewing diffs, interactive rebase. Catppuccin
-  Mocha theme; `mainBranches: [master, main]`.
+- In tmux copy mode (`prefix + [`), `v` starts and `y` copies. tmux sends the
+  copy to Ghostty (OSC 52), which puts it on the macOS clipboard. This works
+  over SSH too.
+- In Ghostty the left Option key is Alt, so fzf's Alt-C and zsh's Alt keys
+  work. The right Option key still types accents.
+- Vim-style tools keep hjkl. Caps Lock is Ctrl.
 
-### File / text utilities
+## Tools
 
-- **bat** — [`config`](shell/.config/bat/config).
-  Syntax-highlighted `cat`. Aliased so `cat` calls bat. Theme:
-  Catppuccin Mocha (fetched by `install.sh`).
-- **eza** — theme fetched by `install.sh` to `~/.config/eza/theme.yml`;
-  `EZA_CONFIG_DIR` is set so eza reads from there on macOS too.
-  Aliases: `ls`, `ll` (`-lah --git`), `la`, `lt` (`--tree --level=2`).
-- **fzf** — wired in [`.zshrc`](shell/.zshrc).
-  - **Ctrl-T** — file picker (fd backend, bat preview).
-  - **Alt-C** — directory picker (eza tree preview).
-  - **Ctrl-R** — handed off to atuin.
-  - `**<TAB>` — completion trigger.
-- **fd** — fast file finder (used by fzf and as a friendlier `find`).
-- **ripgrep** — [`ripgreprc`](shell/.config/ripgrep/ripgreprc).
-  Default flags: smart-case, hidden, follow, glob excludes for
-  `.git/`, `node_modules/`, lockfiles, minified output.
-- **jq** / **yq** — JSON / YAML-TOML-XML wrangling.
-- **zoxide** — `cd` that learns. `z <fragment>` jumps to a frecency
-  match; `zi` is fzf-interactive.
+### Every Mac (core)
 
-### History / shell helpers
+- **zsh**: [`.zshrc`](shell/.zshrc), [`.zprofile`](shell/.zprofile). Emacs
+  keys, shared 100k history. Aliases: `g` git, `ts` tailscale, `ll`, `la`,
+  `lt` (eza), `cat` (bat), `npx` (nubx).
+- **starship**: [`starship.toml`](shell/.config/starship.toml). Two lines:
+  folder, branch and language, then the prompt. User and host show over SSH.
+- **tmux**: [`tmux.conf`](shell/.config/tmux/tmux.conf). Keys above. Plugins
+  (press `prefix + I` the first time): resurrect and continuum, which save
+  sessions every 15 minutes.
+- **Neovim**: [`init.lua`](shell/.config/nvim/init.lua). One file for quick
+  edits. Leader is space: `<space>w` save, `<space>q` quit, `<space>h` clear
+  search. `Ctrl-h/j/k/l` move between windows.
+- **git**: [`.gitconfig`](git/.gitconfig) and
+  [`common`](git/.config/git/common). Commits and tags are signed with the
+  1Password SSH key. delta shows diffs. Pull rebases, push sets the upstream,
+  and pushes to `https://github.com/` go over SSH. Aliases: `co`, `sw`, `st`,
+  `lg`, `last`.
+- **gh**: [`config.yml`](shell/.config/gh/config.yml). Uses SSH. Aliases:
+  `co` (check out a PR), `prv`, `prl`, `prc`, `prd`, `rv`, `rw`, `rl`, `il`,
+  `iv`.
+- **fzf**: Ctrl-T finds files (fd, with a bat preview), Alt-C changes folder
+  (eza preview), `**<Tab>` completes. Ctrl-R goes to atuin.
+- **rg**: [`ripgreprc`](shell/.config/ripgrep/ripgreprc). Smart case, hidden
+  files, follows links, skips `.git`, `node_modules`, lock files and minified
+  files. It also skips what `.gitignore` lists.
+- **fd**, **jq**, **mise**.
 
-- **atuin** — [`config.toml`](shell/.config/atuin/config.toml).
-  Replaces fzf's Ctrl-R with a richer history picker. Compact 25-line
-  inline UI, Catppuccin Mocha. One-time: `atuin import zsh`. Cross-machine
-  sync (optional): `atuin register` then `atuin login`.
-- **direnv** — [`direnvrc`](shell/.config/direnv/direnvrc).
-  Per-directory env vars. Custom layouts: `layout python` (stdlib venv),
-  `layout uv`, `layout node` (puts `node_modules/.bin` on PATH). First
-  time per repo: `direnv allow`.
-- **mise** — [`config.toml`](shell/.config/mise/config.toml).
-  Language version manager. Picks up `.tool-versions` / `mise.toml`
-  per project. `not_found_auto_install = false` — explicit only.
+### Laptops (dev and desktop)
 
-### System utilities
+- **Ghostty**: [`config`](shell/.config/ghostty/config). Opens a plain shell.
+- **Zed**: [`settings.json`](shell/.config/zed/settings.json). The main
+  editor. Vim mode, format on save, installs the Catppuccin extension.
+- **lazygit**: [`config.yml`](shell/.config/lazygit/config.yml). Stage parts
+  of files, read diffs, rebase.
+- **bat**, **eza**, **zoxide** (`z name` jumps to a folder you use often),
+  **yq** (jq for YAML).
+- **atuin**: [`config.toml`](shell/.config/atuin/config.toml). History search
+  on Ctrl-R, synced to the homelab server. The server address is in the
+  private repo. The sync key is in 1Password.
+- **btop**, **mactop** (Apple Silicon power and heat), **tealdeer** (`tldr`).
+- **shellcheck**, **shfmt**, **actionlint**, **hadolint**: linters for shell,
+  GitHub Actions and Dockerfiles.
+- **watchexec** (run a command when files change), **xh** (HTTP requests),
+  **uv** (Python tools), **trash** (delete to the Trash), **mas** (App Store).
+- **1Password** and its CLI, **Tailscale**.
+- **BlockBlock** warns when something adds a launch agent or login item.
+  **LuLu** asks before a program connects out. **Pearcleaner** removes apps
+  and the files they leave.
 
-- **btop** — [`btop.conf`](shell/.config/btop/btop.conf).
-  Process monitor. Catppuccin Mocha theme.
-- **dust** — `du` replacement with a visual tree.
-- **duf** — `df` replacement with cleaner output.
-- **tealdeer** — [`config.toml`](shell/.config/tealdeer/config.toml).
-  Faster `tldr`. Auto-updates the page cache weekly.
-- **shellcheck** — lint shell scripts.
+### Homelab Mac
 
-### Network / VPN / identity
+- **OrbStack** runs the homelab's Docker containers.
+- **smartmontools** (`smartctl`) checks the SSD; `dot doctor` uses it.
+- **gdu** shows what fills the disk.
 
-- **Tailscale** (cask `tailscale-app`) — mesh VPN. Sign in via menu
-  bar or `tailscale up`. Tailnet config (ACLs, MagicDNS, SSH) lives
-  in [the admin console](https://login.tailscale.com).
-- **1Password + 1Password CLI** — SSH agent, secrets manager.
-  `op read 'op://Vault/Item/field'` pulls a value at runtime; pairs
-  with direnv (see [Project-scoped secrets](#project-scoped-secrets)).
+## Private settings
 
-### Apps
+Private settings (signing key, work email rules, host names, the Atuin server)
+live in a second, private repo: `dotfiles-local`, cloned next to this one.
+Secrets don't go there either; they stay in 1Password.
+[`local.example/`](local.example/README.md) shows the layout with fake values.
 
-- **Ghostty**, **Zed** — see above.
-- **Claude Code** (cask `claude-code@latest`) — settings tracked
-  in [`claude/.claude/settings.json`](claude/.claude/settings.json).
+`install.sh --machine NAME` links:
 
-### Personal scripts
+- `~/.config/local` to `dotfiles-local/NAME/`
+- `~/.config/local-shared` to `dotfiles-local/shared/`
 
-`bin/` is on PATH after install. Currently:
+git, ssh, zsh, tmux and mise read files from those folders when they exist.
+`dot` pulls and checks that repo too.
 
-- **`dot`** — sync wrapper. `dot` (= pull + brew bundle + install.sh),
-  or `dot pull|brew|install` for individual steps. Auto-detects the
-  repo or honours `$DOTFILES`.
-- **`new-project <name> [parent]`** — scaffolds `mkdir + git init +
-  .gitignore + .envrc + README.md + initial commit`. Parent defaults
-  to `~/Developer`.
+### Leak guard
 
----
+This repo's pre-commit hook (hk) runs gitleaks, shellcheck and shfmt. It also
+reads `dotfiles-local/denylist`, a list of patterns such as work org names and
+internal host names, and refuses a commit that adds a line matching one.
 
 ## Repo layout
 
 ```
-shell/    .zshrc, .zprofile             → ~/
-          .editorconfig                 → ~/
-          .config/starship.toml         → ~/.config/
-          .config/ghostty/config        → ~/.config/ghostty/
-          .config/tmux/tmux.conf        → ~/.config/tmux/
-          .config/zed/settings.json     → ~/.config/zed/
-          .config/nvim/init.lua         → ~/.config/nvim/
-          .config/bat/config            → ~/.config/bat/
-          .config/ripgrep/ripgreprc     → ~/.config/ripgrep/
-          .config/gh/config.yml         → ~/.config/gh/
-          .config/atuin/config.toml     → ~/.config/atuin/
-          .config/lazygit/config.yml    → ~/.config/lazygit/
-          .config/btop/btop.conf        → ~/.config/btop/
-          .config/mise/config.toml      → ~/.config/mise/
-          .config/direnv/direnvrc       → ~/.config/direnv/
-          .config/tealdeer/config.toml  → ~/.config/tealdeer/
-git/      .gitconfig, .gitignore_global → ~/
-          gitconfig.local.example       (copy to ~/.gitconfig.local)
-ssh/      .ssh/config                   → ~/.ssh/
-          config.local.example          (copy to ~/.ssh/config.local)
-claude/   .claude/settings.json         → ~/.claude/
-          CLAUDE.md.example             (copy to ~/.claude/CLAUDE.md)
-bin/      bin/<scripts>                 → ~/bin/
-macos/    defaults.sh                          (run manually)
-          set-hostname.sh                      (run manually with a name arg)
-          touchid-sudo.sh                      (run manually, one-shot)
-          com.user.capslock-to-ctrl.plist     (loaded by defaults.sh)
+shell/    .zshrc .zprofile .editorconfig        -> ~/
+          .config/<tool>/...                    -> ~/.config/<tool>/
+git/      .gitconfig .gitignore_global          -> ~/
+          .config/git/common, allowed_signers   -> ~/.config/git/
+ssh/      .ssh/config                           -> ~/.ssh/
+bin/      bin/dot fx new-project pi             -> ~/bin/
+agents/   .claude/CLAUDE.md                     -> ~/.claude/
+          .config/herdr/config.toml             -> ~/.config/herdr/
+          claude-settings.json pi-settings.json (merged by install.sh)
+lib/      scripts used by install.sh, dot and the hooks
+macos/    defaults.sh homelab.sh touchid-sudo.sh set-hostname.sh (run by hand)
+local.example/  example of the private repo
+test/     smoke.sh: stows into an empty HOME and checks the result
 ```
 
-`stow -R --no-folding` keeps `~/.config/` (and similar) as a real
-directory, so dynamic content (TPM plugins, atuin DB, gh tokens) doesn't
-end up inside the dotfiles repo.
+`--no-folding` makes stow link files, never whole folders. Files that tools
+write later (TPM plugins, the atuin database, gh tokens) stay out of the repo.
 
----
+To change a setting, edit the file in `~/.config`. It is a link into this
+repo, so commit the change here. To add a file, put it in the package at the
+same path it has under `$HOME` and run `./install.sh`. To add a package, add it
+to `PACKAGES` in `install.sh`.
 
-## Working with the repo
+## Theme and font
 
-### Edit a config
-
-Files are symlinks, so edits to `~/.config/<tool>/<file>` write
-straight back to the dotfiles repo. Just commit when done.
-
-### Add a file to a package
-
-Drop it into `<package>/<path>` mirroring its `$HOME` location, then
-re-stow:
-
-```bash
-./install.sh        # safe, idempotent
-# or:
-stow -R --no-folding -t ~ shell git claude ssh bin
-```
-
-### Add a new package
-
-1. Create `<pkg>/` at the repo root mirroring the `$HOME` paths you
-   want stowed.
-2. Add `<pkg>` to `PACKAGES` in [`install.sh`](install.sh).
-3. `./install.sh`.
-
-### Remove
-
-```bash
-cd ~/.dotfiles
-stow -D -t ~ shell git claude ssh bin
-```
-
-### Sync a machine
-
-```bash
-dot          # git pull + brew bundle + install.sh
-dot pull     # just git pull
-dot brew     # just brew bundle
-dot install  # just install.sh
-```
-
----
-
-## Local overrides
-
-`.zshrc` sources `~/.localrc` if it exists. Put machine-specific
-exports, work tokens, or one-off aliases there. It lives outside the
-repo, so nothing in the dotfiles can leak it.
-
----
-
-## Project-scoped secrets
-
-For per-project tokens (database URLs, API keys), use `direnv` + the
-1Password CLI rather than baking them into `.localrc` or committing
-`.env` files.
-
-In a project directory:
-
-```bash
-# .envrc — gitignored
-export DATABASE_URL="$(op read 'op://Personal/Project DB/url')"
-export OPENAI_API_KEY="$(op read 'op://Personal/OpenAI/api key')"
-# Optional: load any non-secret defaults from a checked-in file
-dotenv .env.defaults
-```
-
-Once: `direnv allow`. Every subsequent `cd` into the project sets the
-env vars; `cd` out unsets them. Values never live on disk in plaintext —
-`op read` pulls from 1Password each time, authenticating via the SSH
-agent integration that handles git signing.
-
-For projects where 1Password isn't in the loop:
-
-```bash
-# .envrc
-dotenv
-```
-
-Reads a gitignored `.env` into the environment when you enter the
-directory.
-
----
-
-## Theme & font
-
-Everything is on **Catppuccin Mocha** + **JetBrainsMono Nerd Font Mono**.
-The font ships via `cask "font-jetbrains-mono-nerd-font"`. Distribution:
-
-| Mechanism | Tools |
+| How the tool gets Catppuccin Mocha | Tools |
 |---|---|
-| Bundled with the tool | Ghostty, Zed, btop, atuin |
-| Hex palette inline | lazygit, fzf, tmux, starship |
-| Named theme via setting | bat (`Catppuccin Mocha`) |
-| Fetched by `install.sh` | bat tmTheme, eza `theme.yml`, nvim colorscheme |
+| Ships with the tool | Ghostty, bat (0.26 and later) |
+| Installed by the tool | Zed (extension) |
+| Colours written in the config | tmux, starship, lazygit, fzf |
+| Downloaded by `install.sh` | btop, atuin, eza, Neovim |
 
----
+The font comes from `cask "font-jetbrains-mono-nerd-font"`.
 
-## macOS defaults
+macOS switches between light and dark by itself. The terminal tools and Zed
+stay on Catppuccin Mocha.
 
-[`macos/defaults.sh`](macos/defaults.sh) covers:
+## macOS settings
 
-- **Finder** — pathbar, status bar, list view default, search current
-  folder, sort folders first, show extensions, no extension-change
-  warning, new windows in `~`.
-- **Dock** — autohide instant, no recents, no launch animation, scale
-  minimise, 48px tiles, hot corners disabled.
-- **Mission Control** — stable space order, group windows by app.
-- **Keyboard** — fast repeat, Tab cycles all controls in dialogs,
-  Colemak-only input, CapsLock → Ctrl via the LaunchAgent
-  ([plist](macos/com.user.capslock-to-ctrl.plist), runs `hidutil`
-  on every login).
-- **Screenshots** — saved to `~/Screenshots`, no shadow.
-- **Window animations** — off; instant resize.
-- **Security** — lock immediately on sleep; quarantine prompt off; SSH
-  config stows the 1Password agent + ControlMaster.
-- **System Update** — auto-check + auto-download; auto-install for
-  security updates only.
-- **Apps** — Activity Monitor shows all processes sorted by CPU,
-  TextEdit defaults to plain text, Disk Utility debug menu, Safari
-  developer menu, `~/Library` unhidden.
+[`macos/defaults.sh`](macos/defaults.sh) sets:
 
----
+- Finder: path and status bars, list view, search in the current folder,
+  folders first, all file extensions.
+- Dock: hides at once, no recent apps, no launch bounce, 48 px icons, no hot
+  corners.
+- Keyboard: fast key repeat, Tab moves through all controls, Colemak only,
+  Caps Lock as Ctrl (a launch agent runs `hidutil` at login).
+- Screenshots go to `~/Screenshots`, without shadows.
+- Lock at once on sleep. No quarantine prompt for downloaded apps.
+- Security updates install by themselves.
+- Activity Monitor, TextEdit, Disk Utility and Safari developer options.
+  `~/Library` is visible.
 
-## Notes / gotchas
+## CI
 
-### tmux + Ghostty
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on macOS:
+shellcheck, shfmt, actionlint, gitleaks over the whole history, and
+`test/smoke.sh`.
 
-Ghostty advertises `TERM=xterm-ghostty`. The tmux config explicitly
-adds it to `terminal-features` so true colour and styled underlines
-pass through. `focus-events on` so vim/Zed inside tmux notice focus
-signals.
+## License
 
-### Catppuccin Mocha for bat / eza / nvim
-
-Not bundled with the upstream tools, so `install.sh` fetches them on
-first run:
-
-- bat — `~/Library/Application Support/bat/themes/Catppuccin Mocha.tmTheme`
-  + `bat cache --build`.
-- eza — `~/.config/eza/theme.yml` (mauve accent variant).
-- nvim — `catppuccin/nvim` cloned into `~/.local/share/nvim/site/pack/colors/start/`.
-
-### Backups on first install
-
-If pre-existing files conflict with stow, they're moved to
-`~/.dotfiles-backup/<timestamp>/` preserving the relative path. The
-backup loop walks the full per-package tree, so nested files (e.g.
-`~/.claude/settings.json`) are caught too.
-
-### Touch ID + tmux
-
-`pam_tid.so` alone silently falls through inside tmux because the
-prompt can't reach the GUI session. `pam-reattach` (added by
-`touchid-sudo.sh`) re-attaches the sudo invocation to the user's GUI
-session so Touch ID actually appears.
-
-### Verifying signatures locally
-
-`git log --show-signature` only verifies SSH signatures with an
-`allowedSignersFile`:
-
-```bash
-git config --global gpg.ssh.allowedSignersFile ~/.config/git/allowed_signers
-```
-
-Add `you@example.com ssh-ed25519 AAAA...` lines for each identity you
-want to trust. Optional; set up only when you start caring about
-verifying others' commits.
+Public domain. See [LICENSE](LICENSE).

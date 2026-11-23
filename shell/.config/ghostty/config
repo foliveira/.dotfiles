@@ -2,10 +2,6 @@
 theme = Catppuccin Mocha
 window-theme = dark
 
-# Launch directly into tmux. -A attaches to the 'main' session if it exists,
-# otherwise creates it. Every Ghostty surface shares the same session.
-command = /opt/homebrew/bin/tmux new-session -A -s main
-
 # Font — Mono variant forces single-cell width on all Nerd Font glyphs.
 font-family = JetBrainsMono Nerd Font Mono
 font-size = 13

@@ -1,30 +1,163 @@
 #!/usr/bin/env bash
-# dot — sync the dotfiles repo and re-apply everything in one shot.
-# Usage: dot [pull|brew|install|all]   (default: all)
+# dot: keep this Mac in step with the dotfiles repo.
+#
+#   dot           check, pull and apply the repo (and the private config repo)
+#   dot upgrade   also upgrade Homebrew and App Store apps, then clean up
+#   dot doctor    check that this Mac is healthy
+#   dot trust     accept the incoming commits after reading them, when the
+#                 signature check refuses them
+#   dot install   apply the repo as it is, without pulling
 set -euo pipefail
 
-# This script is stowed as ~/bin/dot, a symlink into the repo's bin/bin/, so
-# the repo is two levels above the link's target. $DOTFILES overrides it.
+# This script is stowed as ~/bin/dot, a link into the repo's bin/bin/, so the
+# repo is two levels above the link's target. $DOTFILES overrides it.
 if [[ -z "${DOTFILES:-}" ]]; then
     DOTFILES="$(cd "$(dirname "$(readlink -f "$0")")/../.." && pwd -P)"
 fi
-
-if [[ -z "${DOTFILES:-}" || ! -e "$DOTFILES/.git" ]]; then
+if [[ ! -e "$DOTFILES/.git" ]]; then
     echo "error: dotfiles repo not found at $DOTFILES. Set \$DOTFILES." >&2
     exit 1
 fi
 
-step="${1:-all}"
+STATE_DIR="$HOME/.config/dotfiles"
+SIGNERS="$DOTFILES/git/.config/git/allowed_signers"
 log() { printf "\033[1;34m→\033[0m %s\n" "$*"; }
+warn() { printf "\033[1;33m!\033[0m %s\n" "$*" >&2; }
 
-run_pull()    { log "git pull";  git -C "$DOTFILES" pull --ff-only; }
-run_brew()    { log "brew bundle"; brew bundle --file="$DOTFILES/Brewfile"; }
-run_install() { log "install.sh";  bash "$DOTFILES/install.sh"; }
+# The repos dot keeps in step: this one, and the private config repo if set up.
+repos() {
+    echo "$DOTFILES"
+    if [[ -f "$STATE_DIR/local-repo" ]]; then
+        local r
+        r="$(cat "$STATE_DIR/local-repo")"
+        [[ -e "$r/.git" ]] && echo "$r"
+    fi
+}
 
-case "$step" in
-    pull)    run_pull ;;
-    brew)    run_brew ;;
-    install) run_install ;;
-    all)     run_pull; run_install ;;  # install.sh runs brew bundle itself
-    *)       echo "Usage: $(basename "$0") [pull|brew|install|all]" >&2; exit 1 ;;
+upstream() { git -C "$1" rev-parse --abbrev-ref --symbolic-full-name '@{u}'; }
+
+# Fetch a repo and fast-forward it, after checking the incoming commits.
+pull() { # repo, trust (0 or 1)
+    local repo="$1" trust="$2" up
+    up="$(upstream "$repo")"
+    git -C "$repo" fetch -q
+    if git -C "$repo" merge-base --is-ancestor "$up" HEAD; then
+        return 0 # nothing new
+    fi
+    if ! git -C "$repo" merge-base --is-ancestor HEAD "$up"; then
+        echo "error: $repo has local commits that $up doesn't have. Sort that out by hand." >&2
+        exit 1
+    fi
+    if [[ "$trust" == 0 ]]; then
+        local status=0
+        "$DOTFILES/lib/verify-commits.sh" "$repo" HEAD "$up" "$SIGNERS" || status=$?
+        if [[ "$status" == 2 ]]; then
+            warn "allowed_signers has no keys yet, so commits are not checked."
+        elif [[ "$status" != 0 ]]; then
+            echo "error: $repo: refusing to apply $up (see above)." >&2
+            echo "Read the changes with:  git -C $repo log -p --first-parent HEAD..$up" >&2
+            echo "If you trust them, run: dot trust" >&2
+            exit 1
+        fi
+    fi
+    log "Updating $(basename "$repo")"
+    git -C "$repo" merge -q --ff-only "$up"
+}
+
+trust() {
+    local repo up
+    while read -r repo; do
+        up="$(upstream "$repo")"
+        git -C "$repo" fetch -q
+        git -C "$repo" merge-base --is-ancestor "$up" HEAD && continue
+        echo "Incoming commits in $repo:"
+        git -C "$repo" log --first-parent --format='  %h %G? %an: %s' "HEAD..$up"
+        read -r -p "Apply them without the signature check? [y/N] " answer </dev/tty
+        [[ "$answer" == [yY] ]] && pull "$repo" 1
+    done < <(repos)
+}
+
+doctor() {
+    local ok=1
+    log "brew doctor"
+    brew doctor || ok=0
+
+    local profile=""
+    [[ -f "$STATE_DIR/profile" ]] && profile="$(sed -n 's/^profile=//p' "$STATE_DIR/profile")"
+    log "Profile: ${profile:-not set (run install.sh)}"
+
+    if [[ "$profile" != homelab ]]; then
+        local key
+        key="$(git config --get user.signingkey || true)"
+        local sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+        if [[ -z "$key" ]]; then
+            warn "no git signing key set"
+            ok=0
+        elif SSH_AUTH_SOCK="$sock" ssh-add -L 2>/dev/null |
+            grep -qF "$(awk '{print $2}' <<<"${key#key::}")"; then
+            log "Signing key: available in 1Password"
+        else
+            warn "the signing key is not in 1Password's agent (is 1Password unlocked?)"
+            ok=0
+        fi
+    fi
+
+    local used
+    used="$(df -P / | awk 'NR==2 {gsub("%", "", $5); print $5}')"
+    if [[ "$used" -ge 85 ]]; then
+        warn "disk is ${used}% full"
+        ok=0
+    else
+        log "Disk: ${used}% full"
+    fi
+
+    if [[ "$profile" == homelab ]] && command -v smartctl >/dev/null; then
+        if smartctl -H disk0 2>/dev/null | grep -q PASSED; then
+            log "SSD health: passed"
+        else
+            warn "SSD health check did not pass (try: sudo smartctl -a disk0)"
+            ok=0
+        fi
+    fi
+
+    log "Private config files on this Mac:"
+    local f found=0
+    for f in ~/.config/local/{gitconfig,ssh_config,env.zsh,tmux.conf,mise.toml} \
+        ~/.config/local-shared/{gitconfig,ssh_config,env.zsh,tmux.conf}; do
+        [[ -e "$f" ]] && echo "  $f" && found=1
+    done
+    [[ "$found" == 1 ]] || echo "  none (the private config repo is not set up)"
+    for f in ~/.gitconfig.local ~/.localrc ~/.ssh/config.local ~/.config/tmux/local.conf; do
+        [[ -e "$f" ]] && warn "old local file still in use: $f (move it to the private config repo)"
+    done
+
+    [[ "$ok" == 1 ]]
+}
+
+case "${1:-}" in
+"")
+    while read -r r; do pull "$r" 0; done < <(repos)
+    bash "$DOTFILES/install.sh"
+    ;;
+upgrade)
+    while read -r r; do pull "$r" 0; done < <(repos)
+    bash "$DOTFILES/install.sh" --upgrade
+    if command -v mas >/dev/null; then
+        log "App Store updates"
+        mas upgrade
+    fi
+    log "Cleaning up Homebrew"
+    brew autoremove
+    brew cleanup
+    ;;
+doctor) doctor ;;
+trust)
+    trust
+    bash "$DOTFILES/install.sh"
+    ;;
+install) bash "$DOTFILES/install.sh" ;;
+*)
+    sed -n '2,10p' "$0" >&2
+    exit 1
+    ;;
 esac

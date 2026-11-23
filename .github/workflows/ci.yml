@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks reads the whole history.
+          fetch-depth: 0
+
+      - name: Install tools
+        run: brew install shellcheck shfmt actionlint gitleaks stow
+
+      - name: List shell scripts
+        run: |
+          {
+            ls install.sh bin/bin/* lib/*.sh macos/*.sh test/*.sh test/smoke.d/*.sh
+          } > "$RUNNER_TEMP/scripts"
+          cat "$RUNNER_TEMP/scripts"
+
+      - name: shellcheck
+        run: xargs shellcheck < "$RUNNER_TEMP/scripts"
+
+      - name: shfmt
+        run: xargs shfmt -i 4 -ci -d < "$RUNNER_TEMP/scripts"
+
+      - name: actionlint
+        run: actionlint
+
+      - name: gitleaks
+        run: gitleaks git --redact --no-banner .
+
+      - name: Smoke test
+        run: bash test/smoke.sh

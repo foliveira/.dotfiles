@@ -1,0 +1,41 @@
+# Developer tools for the laptops.
+# Tools a project needs (node, python, hk, cocogitto, ...) go in that
+# project's mise.toml, not here.
+
+# Packages and secrets
+brew "nub"           # replaces npm; settings in ~/.npmrc (see install.sh)
+brew "node@24"       # keg-only: not on PATH; only bin/pi uses it
+brew "fnox"          # secrets from 1Password; use through bin/fx
+cask "1password-cli"
+
+# Agents
+brew "herdr"
+brew "hunspell"      # Claude Code's spellcheck; install.sh adds dictionaries
+
+# Git and GitHub
+brew "lazygit"
+brew "actionlint"    # lints GitHub Actions workflows
+brew "hadolint"      # lints Dockerfiles
+
+# Files and text
+brew "bat"
+brew "eza"
+brew "zoxide"
+brew "yq"
+brew "tealdeer"
+brew "trash"         # move files to the Trash instead of deleting them
+
+# Shell scripts
+brew "shellcheck"
+brew "shfmt"
+
+# Running and calling things
+brew "watchexec"     # rerun a command when files change
+brew "xh"            # HTTP client
+brew "uv"            # Python tools (uvx); projects pin Python through mise
+
+# History and system
+brew "atuin"
+brew "btop"
+brew "mactop"        # Apple Silicon CPU, GPU, power and temperature
+brew "mas"           # App Store from the terminal; `dot upgrade` uses it

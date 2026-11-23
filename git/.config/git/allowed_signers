@@ -1,0 +1,5 @@
+# SSH keys trusted to sign commits on this repo's master: the laptops' key only.
+# `dot` refuses to apply master if a commit on its main line is signed by a key
+# not listed here. While this file has no keys, `dot` skips the check and warns.
+#
+# Format: <email> <key type> <public key>

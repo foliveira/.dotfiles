@@ -1,0 +1,10 @@
+# Use the work email in repos that belong to a work organisation.
+# The rule matches the remote URL. Write both URL forms for each org.
+[includeIf "hasconfig:remote.*.url:git@github.com:example-org/**"]
+    path = ~/.config/local-shared/gitconfig-work
+[includeIf "hasconfig:remote.*.url:https://github.com/example-org/**"]
+    path = ~/.config/local-shared/gitconfig-work
+
+# The public half of the 1Password signing key.
+[user]
+    signingkey = key::ssh-ed25519 AAAAC3...example
