@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Sourced by test/smoke.sh. Signs commits with a throwaway key and checks
 # lib/verify-commits.sh, which `dot` uses before applying the repo.
 

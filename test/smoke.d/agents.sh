@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Sourced by test/smoke.sh. Checks lib/merge-json.sh, which install.sh uses
 # for Claude's and pi's settings.
 
