@@ -13,11 +13,7 @@ anything version-specific at the start of the phase that uses it.
 The code for phases 1 to 8 is merged. What is left needs a laptop, the user,
 or the homelab repo:
 
-- Public keys. `allowed_signers` (3.2), the tracked `signingkey` (3.1) and the
-  ssh `Host github.com` block with `github.pub` (3.5) wait for the public
-  halves of the "Github Signing" and "Github" keys. Until then the signing key
-  goes in `dotfiles-local/shared/gitconfig`, and `dot` skips the signature
-  check with a warning.
+- Check on a laptop that a commit shows as Verified on GitHub (3.1, 3.2).
 - The private repo (3.3): create `dotfiles-local`, move the old `*.local`
   files into it, then run `install.sh --machine NAME --local-repo URL`.
 - The dev vault and its service account token in the Keychain (4.1).
@@ -41,7 +37,7 @@ The dotfiles are macOS-only. Nothing in this repo branches on Linux.
 
 ## Requirements
 
-- R1. Signed commits with the 1Password "Github Signing" key on both laptops,
+- R1. Signed commits with the 1Password "Github" key on both laptops,
   with no per-machine key setup. The work laptop's 1Password includes the
   personal account.
 - R2. Secrets come from 1Password through fnox, and no repo can reach beyond a
@@ -162,8 +158,8 @@ Leak guard, in this repo:
   pull, push, rerere, fetch, branch, tag sorting, `rebase.autoStash`,
   `pushInsteadOf`). The Paseo image fetches this file at a pinned commit.
 - `git/.gitconfig` includes `common`, then sets what only the laptops use:
-  `[user]` with name, noreply email and `signingkey = key::<"Github Signing"
-  public key>`; `gpg.ssh.program` set to `op-ssh-sign`; `core.editor`;
+  `[user]` with name, noreply email and `signingkey = key::<"Github"
+  public key>` (one key both logs in and signs); `gpg.ssh.program` set to `op-ssh-sign`; `core.editor`;
   `core.excludesfile`; `gpg.ssh.allowedSignersFile`. It includes the
   companion repo's `gitconfig` files last, so local values win.
 - `git/.config/git/allowed_signers` lists only the laptops' signing key. The
@@ -176,7 +172,7 @@ Leak guard, in this repo:
   refused. That is intended.
 - `ssh/.ssh/config` keeps 1Password's agent socket as `IdentityAgent`, wrapped
   in `Match exec "test -S <socket>"` so ssh still works on the homelab Mac. A
-  `Host github.com` block sets `IdentityFile ~/.ssh/github.pub` (the "Github"
+  `Match host github.com` block, under the same guard, sets `IdentityFile ~/.ssh/github.pub` (the "Github"
   public key, tracked) and `IdentitiesOnly yes`.
 
 ### `dot` (R11)
@@ -371,7 +367,7 @@ installs only core and homelab packages.
 - [ ] 3.1 Split `git/.config/git/common` out of `git/.gitconfig`, and add
   identity, signing key, `allowed_signers`, `rebase.autoStash` and
   `pushInsteadOf`, as under [Git and signing](#git-and-signing-r1).
-- [ ] 3.2 `git/.config/git/allowed_signers` with the noreply address and the
+- [x] 3.2 `git/.config/git/allowed_signers` with the noreply address and the
   laptops' signing key only.
 - [ ] 3.3 Create the private `dotfiles-local` repo with `shared/`,
   `personal/`, `work/`, `homelab/` and `denylist`. Move the contents of each
@@ -383,7 +379,7 @@ installs only core and homelab packages.
   `--machine` flag, and the includes listed under
   [Machine-local config](#machine-local-config). Replace
   `gitconfig.local.example` and `config.local.example` with `local.example/`.
-- [ ] 3.5 `ssh/.ssh/config`: `Include ~/.config/local/ssh_config` first;
+- [x] 3.5 `ssh/.ssh/config`: `Include ~/.config/local/ssh_config` first;
   `Match exec` guard around `IdentityAgent`; the `Host github.com` block;
   `ssh/.ssh/github.pub`.
 - [x] 3.6 Leak guard: `mise.toml` with hk and gitleaks, `hk.pkl` with the
