@@ -19,7 +19,7 @@ dotfiles-local/
 
 | File | Used by | For example |
 |---|---|---|
-| `gitconfig` | git, read last | your signing key, work email rules |
+| `gitconfig` | git, read last | work email rules |
 | `ssh_config` | ssh, read first | hosts you connect to |
 | `env.zsh` | zsh, sourced at start | `ATUIN_SYNC_ADDRESS`, aliases for this machine |
 | `tmux.conf` | tmux | settings for this machine |

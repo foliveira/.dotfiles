@@ -56,9 +56,10 @@ Do these once, in this order.
 
 1. **1Password.** Settings, Developer: turn on "Use the SSH agent" and
    "Integrate with 1Password CLI". `~/.ssh/config` already uses the agent.
-2. **Signing key.** On GitHub, add the "Github Signing" key from 1Password as
-   a signing key. Put its public half in `dotfiles-local/shared/gitconfig` as
-   `user.signingkey`, and in `git/.config/git/allowed_signers`.
+2. **GitHub key.** The "Github" key in 1Password logs in to GitHub and signs
+   commits. Its public half is already in `git/.gitconfig`,
+   `git/.config/git/allowed_signers` and `ssh/.ssh/github.pub`. On GitHub it
+   must be added twice: as an authentication key and as a signing key.
 3. **macOS settings.** `bash macos/defaults.sh`, then log out. The Safari part
    needs Full Disk Access for the terminal; the rest works without it.
 4. **Touch ID for sudo** (optional). `bash macos/touchid-sudo.sh`. It also
@@ -269,7 +270,7 @@ prefix is `Ctrl-a`. The herdr prefix is `Ctrl-b`.
 
 ## Private settings
 
-Private settings (signing key, work email rules, host names, the Atuin server)
+Private settings (work email rules, host names, the Atuin server)
 live in a second, private repo: `dotfiles-local`, cloned next to this one.
 Secrets don't go there either; they stay in 1Password.
 [`local.example/`](local.example/README.md) shows the layout with fake values.

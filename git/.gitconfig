@@ -5,8 +5,9 @@
 [user]
     name = Fabio Oliveira
     email = foliveira@users.noreply.github.com
-    # signingkey is set in the private config repo (~/.config/local/gitconfig)
-    # until the public key is added here.
+    # The public half of the "Github" SSH key in 1Password. The same key logs
+    # in to GitHub and signs commits.
+    signingkey = key::ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPIPJxFC95REcpF0WDX2aJy5j0nyKuIQvTRV/x2qCP6B
 
 [core]
     excludesfile = ~/.gitignore_global
